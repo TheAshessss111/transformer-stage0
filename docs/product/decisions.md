@@ -139,3 +139,26 @@ Step 0.1 形状代数 / 0.2 矩阵微积分 / 0.3 softmax 反向 / 0.4 LayerNorm
 - ❌ Merge commit（关闭，与 `required_linear_history` 冲突）
 
 代价：每个 commit 都必须单独说得过去、且单独可编译，因为它们会原样进入 main。这正是我们想要的纪律。
+
+## D-25 · 公式逐项标记：KaTeX `\htmlData` + `\term` 宏
+
+**T27 spike 的结论**（证据页：`/dev/formula`）。D-07 要求公式每一项可悬停/点击，这依赖于能给任意子表达式挂一个稳定的钩子。实测 KaTeX 0.18.4：
+
+作者写 `\term{id}{内容}`，通过宏展开成 `\htmlData{term=id}{内容}`，渲染出的元素带 `data-term="id"`。
+
+| 场景 | 结果 |
+|---|---|
+| 平铺 | ✅ |
+| `\frac` 的分子与分母内部 | ✅ 两项都拿到 |
+| `\sum` 上下标范围内 | ✅ |
+| 嵌套两层（term 套 term） | ✅ 三层全部拿到 |
+| 两个公式用同名 term | ✅ 不冲突 |
+
+**为什么用属性而不是 `\htmlId`**：`\htmlId` 同样可用，但 id 是全文档唯一的，两个公式复用同一个 term 名就会撞。属性没有这个问题，也就不需要给每个公式加前缀。
+
+**两个必须记住的配置**：
+
+- `trust: true` —— 不开 `\htmlData` 直接被丢弃。
+- `strict: (code) => code === 'htmlExtension' ? 'ignore' : 'warn'` —— `trust` 会让 KaTeX 在**每一次渲染**都打印一条 `htmlExtension` 警告。只静音这一条，其余 strict 警告全部保留（公式写错了要能看见）。
+
+**风险 R-02 就此关闭**：备选方案（`\htmlClass` / `\htmlId` / 拆成多个 span）都不需要了。

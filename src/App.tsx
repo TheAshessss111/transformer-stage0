@@ -4,6 +4,7 @@ import LocaleProvider from './shell/LocaleProvider';
 import SmallScreenGate from './shell/SmallScreenGate';
 import Landing from './pages/Landing';
 import DevTokens from './pages/DevTokens';
+import DevFormula from './pages/DevFormula';
 import StepPage from './steps/StepPage';
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
               <Route index element={<Landing />} />
               <Route path="step/:id" element={<StepPage />} />
               <Route path="dev/tokens" element={<DevTokens />} />
+              <Route path="dev/formula" element={<DevFormula />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
