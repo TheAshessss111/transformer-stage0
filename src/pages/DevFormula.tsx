@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import 'katex/dist/katex.min.css';
-import { TERM_SELECTOR, renderLatex, termsInLatex } from '../viz/formula/render';
+import { TERM_SELECTOR, renderLatex } from '../viz/formula/render';
+import { termsInLatex } from '../viz/formula/validate';
 
 /**
  * T27 spike proof (/dev/formula).
