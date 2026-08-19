@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           # Node >= 23.6 required: the engine harness runs on native TypeScript
           # type stripping (docs/planning/implementation/m0-e0.1-e0.2.md 0.4).
