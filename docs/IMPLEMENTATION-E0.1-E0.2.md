@@ -784,24 +784,65 @@ accumulation and diamond graphs, Jacobian↔VJP identity). Then:
 
 ## 4. Epic Sign-off
 
-**E0.1 done when**
-- [ ] `npm run dev` / `build` / `lint` / `deploy` all work
-- [ ] `/`, `/step/0-1`…`/step/0-5`, `/dev/tokens` all render; sidebar highlights the active step
-- [ ] Locale toggle works and persists
-- [ ] Below 1280px the app tree is unmounted behind the gate
-- [ ] A `react` import inside `src/core/` fails lint
+**Both epics are complete.** Verified 2026-08-19.
 
-**E0.2 done when**
-- [ ] `npm run verify:engine` exits 0 with every VJP gradchecking below 1e-7
-- [ ] `transpose` provably shares its buffer; `reshape` of a non-contiguous array provably copies and reports the element count
-- [ ] `softmax(x) == softmax(x + 1000)` to 1e-15
-- [ ] `softmaxJacobian(s) @ sBar == softmaxVjp(s, sBar)` to 1e-12
-- [ ] `core/` imports nothing from React or `viz/`
-- [ ] `docs/ENGINE.md` exists and matches the code
+**E0.1**
+- [x] `npm run dev` / `build` / `lint` / `deploy` all work
+- [x] `/`, `/step/0-1`…`/step/0-5`, `/dev/tokens` all render; sidebar highlights the active step
+- [x] Locale toggle works and persists (verified: full zh/en switch, no residual strings)
+- [x] Below 1280px the app tree is unmounted (verified: 0 `nav`, 0 `main` in the DOM)
+- [x] A `react` import inside `src/core/` fails lint
 
-**Explicitly still missing after both epics** (so nobody thinks M0 is close to done):
-E0.3 trace recorder · E0.4 highlight bus and formula engine · E0.5 all viz primitives ·
-E0.6 content system · E0.7 Pyodide and the parity panel · E0.8 the actual Step 0.3 page.
+**E0.2**
+- [x] `npm run verify:engine` exits 0 — **102 checks**, every VJP between 1e-10 and 1e-12
+- [x] `transpose` provably shares its buffer; `reshape` of a non-contiguous array provably copies and reports the element count
+- [x] `softmaxJacobian(s) @ sBar == softmaxVjp(s, sBar)` to **5e-16**
+- [x] `core/` imports nothing from React or `viz/` (mechanically enforced)
+- [x] `docs/ENGINE.md` exists and matches the code
+
+### What changed during implementation
+
+Five things the plan got wrong or could not have known. All are reflected in the
+code and in `ARCHITECTURE.md`.
+
+1. **The Vite template moved on.** Vite 8.2, TypeScript 6.0, React 19.2. The
+   template now ships **oxlint** rather than ESLint, and already enables
+   `allowImportingTsExtensions`, `verbatimModuleSyntax` and `erasableSyntaxOnly`
+   — the last of which mechanically enforces §0.4's constraint on `core/`.
+   oxlint was verified to support `no-restricted-imports` with per-file
+   `overrides`, so the layer boundary is still enforced.
+
+2. **`softmax(x) == softmax(x + 1000)` is NOT exact to 1e-15**, as the DoD
+   assumed. The invariance is exact in real arithmetic, but in float64 the
+   residual is bounded by how precisely `x + c` can be represented — one ulp near
+   1000 is ~2.3e-13. Measured: c=10 → 2.2e-16, c=1000 → 1.7e-14. The residual
+   **tracks the shift, not the softmax**, and the harness now proves that scaling.
+   **F0.8.3 must show this rather than claim bit-identical output** — it is a
+   better lesson than the one originally planned.
+
+3. **Gradcheck upstream gradients must be drawn away from zero.** A near-zero
+   upstream component makes the gradient component near-zero, and relative error
+   there is dominated by finite-difference cancellation, not by the VJP. Before
+   this fix `mulScalar` reported 7.9e-8 against a 1e-7 tolerance — one seed away
+   from a false failure. Every check now has three orders of margin.
+
+4. **The relu gradcheck needs a seed search.** A pre-activation sitting near 0
+   makes the central difference straddle the kink. The end-to-end check scans
+   seeds until every pre-activation is >0.05 from zero, and asserts it found one.
+
+5. **`softmax.ts` was split out of `ops.ts`**, and `softmaxSteps` was added
+   (returning rowMax / shifted / exponentials / denominator / probs) so F0.8.2's
+   four-stage playback drives itself from real intermediates rather than
+   depending on trace granularity.
+
+### Carried into later epics
+
+- `scripts/serve-pages.mjs` reproduces GitHub Pages locally (base path + 404
+  fallback) so a deploy can be checked before it is pushed.
+- Deep links return HTTP 404 while rendering correctly — inherent to the Pages
+  SPA fallback. `HashRouter` is the zero-caveat alternative if it ever matters.
+- `core/numerics/` (float.ts, hazards.ts) is listed in `ARCHITECTURE.md` but
+  belongs to M4, and was correctly not built here.
 
 ---
 
