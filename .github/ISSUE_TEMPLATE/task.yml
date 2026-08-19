@@ -1,0 +1,38 @@
+name: Task
+description: A roadmap item, or work that should become one
+labels: [task]
+body:
+  - type: input
+    id: roadmap
+    attributes:
+      label: Roadmap reference
+      description: Epic and feature IDs, e.g. "E0.3 / F0.3.1". Put "unplanned" if it is not on the roadmap yet.
+      placeholder: E0.3 / F0.3.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this is done.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of done
+      description: >
+        The specific, checkable conditions — on top of the three baseline layers
+        in docs/contributing/definition-of-done.md.
+      placeholder: |
+        - [ ] ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Design constraints, prior decisions that bind this, known traps.

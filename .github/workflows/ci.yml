@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# One in-flight run per branch; a new push supersedes the old one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Single job on purpose: it becomes one required status check named `verify`,
+  # and each step's name is enough to see what failed.
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          # Node >= 23.6 required: the engine harness runs on native TypeScript
+          # type stripping (docs/planning/implementation/m0-e0.1-e0.2.md 0.4).
+          node-version: '24'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        # Also enforces the core/ layer boundary: core/ may not import any UI.
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc -b
+
+      - name: Verify engine
+        # The reason this gate exists. 102 checks including a gradcheck of every
+        # hand-written VJP. If the engine is wrong, every visualization above it
+        # is lying, and nothing on screen would show it.
+        run: npm run verify:engine
+
+      - name: Build
+        run: npm run build

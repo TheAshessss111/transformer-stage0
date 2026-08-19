@@ -1,10 +1,12 @@
 # Stage Zero
 
+[![CI](https://github.com/TheAshessss111/transformer-stage0/actions/workflows/ci.yml/badge.svg)](https://github.com/TheAshessss111/transformer-stage0/actions/workflows/ci.yml)
+
 > 把《手搓 Transformer》实施方案 **阶段 0：数学与工具预备** 变成一个可以动手玩的桌面端网页。
 >
 > 看到操作就知道 shape 怎么变；看到公式就知道每一项是什么形状、现在的值是多少、它在干什么。
 
-**状态**：规划完成，尚未开始实现。
+**状态**：M0 进行中。E0.1（脚手架与工程规范）、E0.2（张量引擎）已完成 —— 引擎有 102 项检查，每个手写反向都过 gradcheck。
 
 ## 覆盖的五个 Step
 
@@ -16,12 +18,31 @@
 | 0.4 | LayerNorm 的反向 | 梯度投影到零均值 ∩ 正交子空间的几何图 |
 | 0.5 | 数值稳定性 | 危险操作沙盒（七条清单，现场制造 NaN） |
 
-## 规划文档
+## 快速开始
 
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) —— 22 项需求拍板，本项目的宪法
-- [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) —— 需求规格、功能/非功能需求、明确不做的事
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) —— 技术栈、分层、四个核心设计决策、目录结构
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) —— M0–M5 里程碑 → Epic → 功能，含风险清单
+```bash
+npm install
+npm run dev              # 开发服务器
+npm run verify:engine    # 102 项引擎检查（无测试框架，跑在 Node 原生 TS 上）
+```
+
+## 文档
+
+完整索引在 **[docs/README.md](docs/README.md)**，按职能分四组：
+
+| 分组 | 内容 |
+|---|---|
+| [product/](docs/product/) | [需求规格](docs/product/requirements.md) · [24 条决策记录](docs/product/decisions.md) |
+| [architecture/](docs/architecture/) | [架构总览](docs/architecture/overview.md) · [引擎 API 参考](docs/architecture/engine.md) |
+| [planning/](docs/planning/) | [路线图](docs/planning/roadmap.md) · [实施计划](docs/planning/implementation/) |
+| [contributing/](docs/contributing/) | [分支策略](docs/contributing/branching.md) · [提交规范](docs/contributing/commits.md) · [DoD](docs/contributing/definition-of-done.md) |
+
+## 贡献流程
+
+`main` 受保护：禁止直推，一律走 PR，CI 五道 gate 全绿才能合并。
+合并方式是 **rebase 而非 squash** —— 逐 Step 的 commit history 本身就是产出物（[D-24](docs/product/decisions.md)）。
+
+细节见 [分支策略](docs/contributing/branching.md)。
 
 ## 技术栈一览
 

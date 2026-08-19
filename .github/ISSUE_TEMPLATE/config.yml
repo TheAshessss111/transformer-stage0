@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Roadmap
+    url: https://github.com/TheAshessss111/transformer-stage0/blob/main/docs/planning/roadmap.md
+    about: Milestones, epics and features — check here before filing a task.
+  - name: Decision records
+    url: https://github.com/TheAshessss111/transformer-stage0/blob/main/docs/product/decisions.md
+    about: 24 decisions with their reasons and costs. Disagreements start here.
