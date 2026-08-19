@@ -1,4 +1,4 @@
-import { overlaps, overlapsAny, parseTargetKey, targetKey, type HighlightTarget } from './types.ts';
+import { overlapsAny, parseTargetKey, targetKey, type HighlightTarget } from './types.ts';
 
 /**
  * Highlight state, deliberately OUTSIDE React.
@@ -22,26 +22,45 @@ import { overlaps, overlapsAny, parseTargetKey, targetKey, type HighlightTarget 
 
 export type HighlightLevel = 'none' | 'hover' | 'pinned';
 
+/**
+ * What one gesture points at.
+ *
+ * A group rather than a single target, because pointing is usually plural: the
+ * LayerNorm de-scale term is about x̂ AND g, and hovering it should light the
+ * term, both tensors, and the code line together. Modelling that as one target
+ * would force callers to pick which one "really" counts.
+ */
+export type HighlightSelection = readonly HighlightTarget[];
+
 export interface HighlightStore {
   subscribe: (listener: () => void) => () => void;
-  getHover: () => HighlightTarget | null;
-  getPinned: () => readonly HighlightTarget[];
-  setHover: (target: HighlightTarget | null) => void;
-  togglePin: (target: HighlightTarget) => void;
+  getHover: () => HighlightSelection | null;
+  getPinned: () => readonly HighlightSelection[];
+  setHover: (next: HighlightTarget | HighlightSelection | null) => void;
+  togglePin: (next: HighlightTarget | HighlightSelection) => void;
   clearPins: () => void;
   levelFor: (target: HighlightTarget) => HighlightLevel;
   /** Same answer, addressed by key — see useHighlightLevel. */
   levelForKey: (key: string) => HighlightLevel;
 }
 
-function sameTarget(a: HighlightTarget | null, b: HighlightTarget | null): boolean {
+function asSelection(next: HighlightTarget | HighlightSelection): HighlightSelection {
+  return Array.isArray(next) ? next : [next as HighlightTarget];
+}
+
+/** Order-independent identity for a group. */
+export function selectionKey(selection: HighlightSelection): string {
+  return [...selection].map(targetKey).sort().join('|');
+}
+
+function sameSelection(a: HighlightSelection | null, b: HighlightSelection | null): boolean {
   if (a === null || b === null) return a === b;
-  return targetKey(a) === targetKey(b);
+  return selectionKey(a) === selectionKey(b);
 }
 
 export function createHighlightStore(): HighlightStore {
-  let hover: HighlightTarget | null = null;
-  let pinned: readonly HighlightTarget[] = [];
+  let hover: HighlightSelection | null = null;
+  let pinned: readonly HighlightSelection[] = [];
   const listeners = new Set<() => void>();
   // Parsing a key is cheap, but this runs for every subscribed view on every
   // notification, so the results are kept.
@@ -49,6 +68,12 @@ export function createHighlightStore(): HighlightStore {
 
   const emit = (): void => {
     for (const listener of listeners) listener();
+  };
+
+  const levelOf = (target: HighlightTarget): HighlightLevel => {
+    for (const group of pinned) if (overlapsAny(target, group)) return 'pinned';
+    if (hover !== null && overlapsAny(target, hover)) return 'hover';
+    return 'none';
   };
 
   return {
@@ -63,17 +88,19 @@ export function createHighlightStore(): HighlightStore {
     getPinned: () => pinned,
 
     setHover(next) {
+      const selection = next === null ? null : asSelection(next);
       // pointerover fires repeatedly over the same element. Without this guard
       // every mouse move would notify every subscriber for no change at all.
-      if (sameTarget(hover, next)) return;
-      hover = next;
+      if (sameSelection(hover, selection)) return;
+      hover = selection;
       emit();
     },
 
     togglePin(next) {
-      const key = targetKey(next);
-      const index = pinned.findIndex((p) => targetKey(p) === key);
-      pinned = index === -1 ? [...pinned, next] : pinned.filter((_, i) => i !== index);
+      const selection = asSelection(next);
+      const key = selectionKey(selection);
+      const index = pinned.findIndex((p) => selectionKey(p) === key);
+      pinned = index === -1 ? [...pinned, selection] : pinned.filter((_, i) => i !== index);
       emit();
     },
 
@@ -85,9 +112,7 @@ export function createHighlightStore(): HighlightStore {
 
     /** Pinned beats hover, so a pin does not flicker as the pointer crosses it. */
     levelFor(target) {
-      if (overlapsAny(target, pinned)) return 'pinned';
-      if (hover !== null && overlaps(target, hover)) return 'hover';
-      return 'none';
+      return levelOf(target);
     },
 
     levelForKey(key) {
@@ -96,9 +121,7 @@ export function createHighlightStore(): HighlightStore {
         target = parseTargetKey(key);
         parsed.set(key, target);
       }
-      if (overlapsAny(target, pinned)) return 'pinned';
-      if (hover !== null && overlaps(target, hover)) return 'hover';
-      return 'none';
+      return levelOf(target);
     },
   };
 }
