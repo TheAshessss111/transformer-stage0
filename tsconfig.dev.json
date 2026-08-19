@@ -1,0 +1,26 @@
+{
+  /* The engine verification harness runs under Node's native TypeScript type
+     stripping (`node src/core/tensor/__dev__/verify.ts`), so it needs node types
+     and must stay within erasable syntax. Kept out of tsconfig.app.json so app
+     code never sees Node globals. */
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.dev.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "esnext",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src/**/__dev__/**/*.ts"]
+}
