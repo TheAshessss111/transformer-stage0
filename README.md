@@ -23,7 +23,7 @@
 ```bash
 npm install
 npm run dev              # 开发服务器
-npm run verify:engine    # 102 项引擎检查（无测试框架，跑在 Node 原生 TS 上）
+npm run verify           # 123 项检查（无测试框架，跑在 Node 原生 TS 上）
 ```
 
 ## 文档

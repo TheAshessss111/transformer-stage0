@@ -39,7 +39,7 @@ Epic 分支用 Epic 编号去掉点号：E0.3 → `e03`，E1.1 → `e11`。
 ```bash
 git switch main && git pull --ff-only
 git switch -c feat/e03-trace-recorder
-# ... 逐任务提交，每个 commit 都要能单独编译并通过 verify:engine ...
+# ... 逐任务提交，每个 commit 都要能单独编译并通过 verify ...
 git push -u origin feat/e03-trace-recorder
 gh pr create --fill
 ```
@@ -47,7 +47,7 @@ gh pr create --fill
 合并前本地自检（和 CI 跑的是同一套）：
 
 ```bash
-npm run format:check && npm run lint && npx tsc -b && npm run verify:engine && npm run build
+npm run format:check && npm run lint && npx tsc -b && npm run verify && npm run build
 ```
 
 ## main 的保护规则
@@ -74,7 +74,7 @@ npm run format:check && npm run lint && npx tsc -b && npm run verify:engine && n
 | Format | `npm run format:check` | 格式漂移 |
 | Lint | `npm run lint` | 代码问题，**以及 `core/` 引入 UI 依赖**（分层铁律） |
 | Typecheck | `npx tsc -b` | 类型错误 |
-| **Engine** | `npm run verify:engine` | **引擎回归 —— 102 项检查，含每个 VJP 的 gradcheck** |
+| **Engine** | `npm run verify` | **引擎回归 —— 102 项检查，含每个 VJP 的 gradcheck** |
 | Build | `npm run build` | 生产构建失败 |
 
 第四项是这套 gate 存在的理由。引擎算错了，上面所有可视化都在骗人，而这件事在页面上看不出来 —— 它只会安静地教你错的数学。这也是 `docs/planning/roadmap.md` 风险 R-04 的正式解法。
@@ -88,7 +88,7 @@ npm run format:check && npm run lint && npx tsc -b && npm run verify:engine && n
 所以每个 commit 都必须：
 
 - 单独说得过去（message 写清"做了什么 + 怎么验收的"）
-- 单独可编译、单独能过 `verify:engine`
+- 单独可编译、单独能过 `verify`
 
 做不到就在推送前用 `git rebase -i` 整理干净。**代价是真实的，但这正是我们要的纪律。**
 

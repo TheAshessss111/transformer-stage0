@@ -23,7 +23,7 @@ import {
   size,
   toNested,
   zeros,
-} from '../ndarray.ts';
+} from '../core/tensor/ndarray.ts';
 import {
   ascontiguousarray,
   expandDims,
@@ -33,13 +33,18 @@ import {
   squeeze,
   swapAxes,
   transpose,
-} from '../shape.ts';
-import { broadcastShapes, broadcastTo, canBroadcastTo, unbroadcast } from '../broadcast.ts';
-import { add, matmul, max, mean, mul, sum } from '../ops.ts';
-import { arange, mulberry32, onehot, randn, uniform } from '../random.ts';
-import { classify, formatBoundShape, formatValue } from '../format.ts';
-import { numericalGrad, scalarize } from '../../gradcheck/numericalGrad.ts';
-import { relError } from '../../gradcheck/relError.ts';
+} from '../core/tensor/shape.ts';
+import {
+  broadcastShapes,
+  broadcastTo,
+  canBroadcastTo,
+  unbroadcast,
+} from '../core/tensor/broadcast.ts';
+import { add, matmul, max, mean, mul, sum } from '../core/tensor/ops.ts';
+import { arange, mulberry32, onehot, randn, uniform } from '../core/tensor/random.ts';
+import { classify, formatBoundShape, formatValue } from '../core/tensor/format.ts';
+import { numericalGrad, scalarize } from '../core/gradcheck/numericalGrad.ts';
+import { relError } from '../core/gradcheck/relError.ts';
 
 // ── NdArray ─────────────────────────────────────────────────────────────────
 

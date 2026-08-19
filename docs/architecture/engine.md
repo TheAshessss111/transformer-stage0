@@ -10,7 +10,7 @@
 Verify it at any time:
 
 ```bash
-npm run verify:engine
+npm run verify
 ```
 
 102 checks. Runs on Node's native TypeScript type stripping — no test framework,
