@@ -7,10 +7,12 @@
  *
  *   structural.ts  T14 — NdArray, shape ops, broadcasting, operators, PRNG, formatting
  *   vjp.ts         T16 — gradcheck for every hand-written backward
+ *   semantics.ts   T20 — softmax family, autograd, Jacobian identities
  */
 
 import './structural.ts';
 import './vjp.ts';
+import './semantics.ts';
 import { report } from './harness.ts';
 
 report();
