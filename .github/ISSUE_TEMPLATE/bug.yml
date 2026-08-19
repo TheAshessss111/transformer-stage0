@@ -1,0 +1,50 @@
+name: Bug
+description: Something is wrong — including "the page shows a number I cannot justify"
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+      description: If this is a numerical disagreement, say what the correct value is and how you know.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      placeholder: |
+        1. Open /step/0-3
+        2. Set B=2, T=4
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - core (tensor engine)
+        - viz (visualization primitives)
+        - labs (a specific step's lab)
+        - sandbox (Pyodide / gradcheck)
+        - shell / routing / theme
+        - docs
+        - build / CI
+    validations:
+      required: true
+
+  - type: input
+    id: verify
+    attributes:
+      label: Does `npm run verify:engine` still pass?
+      placeholder: 'yes / no / not applicable'

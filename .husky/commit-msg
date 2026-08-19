@@ -1,0 +1,35 @@
+# Conventional Commits check — zero dependencies, see docs/contributing/commits.md
+#
+# Deliberately not commitlint: that is a dependency tree for one regex, and
+# D-22's spirit is minimal tooling.
+
+msg_file="$1"
+first_line=$(head -n1 "$msg_file")
+
+# Let git's own machinery through untouched.
+case "$first_line" in
+  "Merge "*|"Revert "*|"fixup!"*|"squash!"*|"#"*) exit 0 ;;
+esac
+
+pattern='^(feat|fix|docs|refactor|perf|chore|ci|build|style|test|revert)(\([a-z0-9._-]+\))?!?: .+'
+
+if ! printf '%s' "$first_line" | grep -Eq "$pattern"; then
+  echo "✖ Commit message does not follow Conventional Commits."
+  echo ""
+  echo "  got:      $first_line"
+  echo "  expected: <type>(<scope>): <subject>"
+  echo ""
+  echo "  type:  feat fix docs refactor perf chore ci build style test revert"
+  echo "  scope: core viz shell content labs steps sandbox py theme docs ci deps"
+  echo ""
+  echo "  see docs/contributing/commits.md"
+  exit 1
+fi
+
+subject_length=${#first_line}
+if [ "$subject_length" -gt 72 ]; then
+  echo "✖ Subject line is $subject_length characters; keep it to 72."
+  echo "  Move the detail into the body — it has room, and rebase-merge means"
+  echo "  every commit lands on main as written (D-24)."
+  exit 1
+fi
