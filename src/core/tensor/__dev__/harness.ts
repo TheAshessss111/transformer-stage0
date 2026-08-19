@@ -4,8 +4,8 @@
  * Runs under Node's native TypeScript type stripping:
  *     node src/core/tensor/__dev__/verify.ts
  *
- * Deliberately not a test framework (see docs/DECISIONS.md D-22 and
- * docs/IMPLEMENTATION-E0.1-E0.2.md §0.4): no globals, no config, no watch mode.
+ * Deliberately not a test framework (see docs/product/decisions.md D-22 and
+ * docs/planning/implementation/m0-e0.1-e0.2.md §0.4): no globals, no config, no watch mode.
  * It collects results, prints a table, and sets a non-zero exit code on failure.
  */
 

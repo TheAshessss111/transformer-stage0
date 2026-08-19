@@ -10,7 +10,7 @@ export interface StepMeta {
   number: string;
   title: Bilingual;
   tagline: Bilingual;
-  /** The headline visualization this step is built around (ROADMAP.md D-12). */
+  /** The headline visualization this step is built around (docs/planning/roadmap.md D-12). */
   signatureViz: Bilingual;
   status: StepStatus;
 }

@@ -2,7 +2,7 @@ import { useMediaQuery } from './useMediaQuery';
 import { useLocale } from './locale';
 import LocaleToggle from './LocaleToggle';
 
-/** Desktop-only, per DECISIONS.md D-14. */
+/** Desktop-only, per docs/product/decisions.md D-14. */
 export const MIN_WIDTH_PX = 1280;
 
 /**
