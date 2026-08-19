@@ -7,6 +7,7 @@ import Landing from './pages/Landing';
 import DevTokens from './pages/DevTokens';
 import DevFormula from './pages/DevFormula';
 import DevTrace from './pages/DevTrace';
+import DevHighlight from './pages/DevHighlight';
 import StepPage from './steps/StepPage';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
                 <Route path="dev/tokens" element={<DevTokens />} />
                 <Route path="dev/formula" element={<DevFormula />} />
                 <Route path="dev/trace" element={<DevTrace />} />
+                <Route path="dev/highlight" element={<DevHighlight />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

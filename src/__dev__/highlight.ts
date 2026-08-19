@@ -15,7 +15,7 @@ import {
   targetKey,
   type HighlightTarget,
 } from '../viz/highlight/types.ts';
-import { createHighlightStore } from '../viz/highlight/store.ts';
+import { createHighlightStore, selectionKey } from '../viz/highlight/store.ts';
 
 const SAMPLES: HighlightTarget[] = [
   target.tensor('s'),
@@ -248,7 +248,10 @@ check('pins are a set: toggling twice removes, and several can coexist', () => {
   expect(store.getPinned().length === 2, 'multi-pin is the point — comparison needs it');
   store.togglePin(target.tensor('s'));
   expect(store.getPinned().length === 1, 'toggling the same target removes it');
-  expect(targetKey(store.getPinned()[0]) === targetKey(target.tensor('probs')), 'the right one');
+  expect(
+    selectionKey(store.getPinned()[0]) === selectionKey([target.tensor('probs')]),
+    'the right one',
+  );
   store.clearPins();
   expect(store.getPinned().length === 0, 'clearPins');
 });
@@ -271,4 +274,21 @@ check('a pinned whole tensor lights its cells and axes', () => {
   expect(store.levelFor(target.tensor('probs', [2, 3])) === 'pinned', 'a cell');
   expect(store.levelFor(target.axis('probs', 1)) === 'pinned', 'an axis');
   expect(store.levelFor(target.tensor('s', [2, 3])) === 'none', 'a different tensor');
+});
+
+check('a group lights every target it contains, and pins as one unit', () => {
+  const store = createHighlightStore();
+  const deScale = [target.tensor('xhat'), target.tensor('g'), target.codeLine(7)];
+
+  store.setHover(deScale);
+  expect(store.levelFor(target.tensor('xhat', [0, 0])) === 'hover', 'first tensor');
+  expect(store.levelFor(target.tensor('g', [3, 1])) === 'hover', 'second tensor');
+  expect(store.levelFor(target.codeLine(7)) === 'hover', 'the code line');
+  expect(store.levelFor(target.tensor('probs')) === 'none', 'something not in the group');
+
+  store.togglePin(deScale);
+  expect(store.getPinned().length === 1, 'a group pins as one unit, not three');
+  store.togglePin([...deScale].reverse());
+  expect(store.getPinned().length === 0, 'group identity is order-independent');
+  return 'one gesture, three targets';
 });

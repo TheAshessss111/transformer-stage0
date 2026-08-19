@@ -88,3 +88,27 @@
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
 }
+
+/*
+ * Formula terms. The attribute is written by viz/formula/Formula.tsx rather
+ * than by a React re-render, so hovering never re-runs KaTeX.
+ */
+@layer components {
+  [data-term] {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0 2px;
+    transition:
+      background-color 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  [data-term][data-highlight='hover'] {
+    background-color: color-mix(in oklab, var(--color-view) 20%, transparent);
+  }
+
+  [data-term][data-highlight='pinned'] {
+    background-color: color-mix(in oklab, var(--color-view) 32%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-view);
+  }
+}

@@ -47,7 +47,7 @@ export default function Sidebar() {
       </ul>
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-line px-5 py-3 font-mono text-xs text-ink-faint">
-        {['/dev/tokens', '/dev/trace', '/dev/formula'].map((path) => (
+        {['/dev/tokens', '/dev/trace', '/dev/formula', '/dev/highlight'].map((path) => (
           <NavLink key={path} to={path} className="hover:text-ink-dim">
             {path.replace('/dev/', '')}
           </NavLink>
