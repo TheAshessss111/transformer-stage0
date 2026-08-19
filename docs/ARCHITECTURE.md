@@ -6,9 +6,9 @@
 
 | 层 | 选型 | 版本 | 为什么是它 |
 |---|---|---|---|
-| 构建 | **Vite** | 7.x | 秒级 HMR；Web Worker 与 WASM 一等公民支持（Pyodide 需要） |
+| 构建 | **Vite** | 8.2 | 秒级 HMR；Web Worker 与 WASM 一等公民支持（Pyodide 需要） |
 | 框架 | **React** | 19 | 组件模型贴合「每 Step 若干独立实验室」；生态最全 |
-| 语言 | **TypeScript** | 5.x | 张量形状、双语文案、公式项元数据都靠类型兜底 |
+| 语言 | **TypeScript** | 6.0 | 张量形状、双语文案、公式项元数据都靠类型兜底 |
 | 样式 | **Tailwind CSS** | v4 | CSS-first `@theme` 令牌，暗色仪表盘配色集中管理 |
 | 公式 | **KaTeX** | 0.16+ | 同步渲染（无布局抖动）；`\htmlId` + `trust` 支持逐项挂载 |
 | 动画 | **motion** | 12.x | 单步播放的过渡编排；`useMotionValue` 驱动滑块联动 |
@@ -17,7 +17,7 @@
 | 代码编辑 | **CodeMirror 6** | — | 比 Monaco 轻一个量级；Python 语法与主题定制简单 |
 | Python | **Pyodide** | 0.28+ | 浏览器内真 NumPy；跑在 Web Worker 里 |
 | 状态 | **Zustand** | 5.x | 每个 Lab 一个小 store；避免 Context 重渲染风暴 |
-| 规范 | ESLint + Prettier + husky + lint-staged | — | D-22 |
+| 规范 | **oxlint** + Prettier + husky + lint-staged | — | D-22。模板已改用 oxlint（比 ESLint 快一个量级，且是 Vite 8 默认）；实测它支持 `no-restricted-imports` 与 per-file `overrides`，足以机械化执行 core/ 分层铁律 |
 
 > **不引入**：Redux、Next.js、图表库（D3 之类）。可视化全部手写 SVG / Canvas / R3F —— 因为要画的是张量而不是折线图，通用图表库帮不上忙反而添乱。
 
@@ -207,7 +207,9 @@ ChallengeRunner                 numpy 计算
 ```
 transformer-stage0/
 ├── README.md
-├── package.json  vite.config.ts  tsconfig.json  eslint.config.js  .prettierrc
+├── package.json  vite.config.ts  tsconfig.json  .oxlintrc.json  .prettierrc.json
+├── tsconfig.app.json  tsconfig.node.json  tsconfig.dev.json
+├── scripts/serve-pages.mjs   # 本地模拟 GitHub Pages（base 路径 + 404 回退）
 ├── .husky/pre-commit
 ├── index.html
 ├── docs/
