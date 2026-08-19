@@ -1,24 +1,25 @@
 import { createContext, use } from 'react';
+import type { L, Locale } from '../core/i18n';
 
 /**
- * Minimal locale plumbing for E0.1.
+ * Locale plumbing for the UI layers.
  *
- * The full content system (typed `L<T>` blocks, BlockRenderer) is F0.6.2 and will
- * be built on top of this context without changing it. See impl plan section 0.5.
+ * The `L<T>` type itself lives in core/i18n.ts, because it is a data shape and
+ * because core/trace carries bilingual display text. This module adds the React
+ * side: the context, the hook, and persistence.
+ *
+ * The full content system (typed Block lists, BlockRenderer) is F0.6.2 and will
+ * be built on top of this without changing it.
  */
-export type Locale = 'zh' | 'en';
 
-/** A string that exists in both languages.缺一个字段就编译报错。 */
-export interface Bilingual {
-  zh: string;
-  en: string;
-}
+export type { L, Locale } from '../core/i18n';
+export { resolveL } from '../core/i18n';
 
 export interface LocaleState {
   locale: Locale;
   setLocale: (next: Locale) => void;
-  /** Resolve a bilingual string against the active locale. */
-  t: (value: Bilingual) => string;
+  /** Resolve a bilingual value against the active locale. */
+  t: <T>(value: L<T>) => T;
 }
 
 export const LOCALE_STORAGE_KEY = 'stage-zero:locale';
