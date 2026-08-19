@@ -1,1 +1,90 @@
 @import 'tailwindcss';
+
+/*
+ * Stage Zero design tokens — dark technical dashboard (DECISIONS.md D-11).
+ *
+ * Tailwind's default palette is reset to `initial` on purpose: if `bg-blue-500`
+ * does not exist as a utility, off-system colours cannot leak into the UI by
+ * accident. Everything visible must come from a token below.
+ */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* ── surfaces: three levels (ARCHITECTURE.md section 8) ── */
+  --color-surface: oklch(0.17 0.012 265); /* page background */
+  --color-panel: oklch(0.22 0.014 265); /* raised card / sidebar */
+  --color-well: oklch(0.13 0.01 265); /* recessed: grids, code, inputs */
+  --color-line: oklch(0.32 0.015 265); /* borders, dividers */
+  --color-line-strong: oklch(0.42 0.018 265);
+
+  --color-ink: oklch(0.93 0.005 265); /* primary text */
+  --color-ink-dim: oklch(0.68 0.01 265); /* secondary text, axis labels */
+  --color-ink-faint: oklch(0.5 0.012 265); /* tertiary, disabled */
+
+  /* ── diverging scale: SIGNED quantities (gradients).
+        Zero MUST equal --color-well so a zero matrix reads as empty, not grey. ── */
+  --color-grad-neg: oklch(0.62 0.19 25); /* red-orange */
+  --color-grad-zero: oklch(0.13 0.01 265); /* == --color-well */
+  --color-grad-pos: oklch(0.62 0.16 255); /* blue */
+
+  /* ── sequential scale: NON-NEGATIVE magnitudes (probabilities, |x|) ── */
+  --color-mag-0: oklch(0.16 0.02 275);
+  --color-mag-1: oklch(0.32 0.09 270);
+  --color-mag-2: oklch(0.48 0.13 230);
+  --color-mag-3: oklch(0.66 0.14 190);
+  --color-mag-4: oklch(0.85 0.13 160);
+
+  /* ── memory semantics.
+        RULE: badges, borders and pipeline connectors ONLY — never a data fill,
+        so they can never be confused with the diverging scale above. ── */
+  --color-view: oklch(0.75 0.13 195); /* zero-copy view */
+  --color-copy: oklch(0.78 0.15 75); /* a real memory copy happened */
+
+  /* ── non-finite values (format.ts ValueKind maps onto these) ── */
+  --color-nan: oklch(0.7 0.25 330); /* magenta */
+  --color-inf: oklch(0.68 0.21 35); /* orange-red */
+
+  /* ── status ── */
+  --color-ok: oklch(0.74 0.16 150);
+  --color-warn: oklch(0.8 0.15 85);
+  --color-err: oklch(0.65 0.21 25);
+
+  /* ── type ── */
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Matrix cells must not jitter as digits change. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}

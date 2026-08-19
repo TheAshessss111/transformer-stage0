@@ -65,7 +65,10 @@ export function report(): void {
     else failed += 1;
   }
 
-  const summary = failed === 0 ? `${GREEN}${passed} passed${RESET}` : `${GREEN}${passed} passed${RESET}, ${RED}${failed} FAILED${RESET}`;
+  const summary =
+    failed === 0
+      ? `${GREEN}${passed} passed${RESET}`
+      : `${GREEN}${passed} passed${RESET}, ${RED}${failed} FAILED${RESET}`;
   console.log(`\n${summary}\n`);
 
   if (failed > 0) process.exitCode = 1;
