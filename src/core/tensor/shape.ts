@@ -1,7 +1,7 @@
 /**
  * Shape operations, and the one place a real memory copy can happen.
  *
- * The contract every visualization depends on (ARCHITECTURE.md A-01):
+ * The contract every visualization depends on (docs/architecture/overview.md A-01):
  *
  *   transpose / permute / swapAxes / select / expandDims / squeeze  → always a view
  *   reshape of a contiguous array                                   → a view

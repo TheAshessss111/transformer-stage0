@@ -2,7 +2,7 @@
  * Forward operators.
  *
  * These are raw NdArray → NdArray functions with no graph attached. The tape
- * lives in autograd.ts and the backwards in vjp.ts (ARCHITECTURE.md A-03).
+ * lives in autograd.ts and the backwards in vjp.ts (docs/architecture/overview.md A-03).
  * Keeping the three apart is what lets a lab that only needs a forward pass —
  * Step 0.1's shape pipeline — stay cheap, and what lets E0.2 gradcheck a single
  * VJP in isolation.

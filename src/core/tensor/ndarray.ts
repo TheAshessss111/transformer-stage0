@@ -1,7 +1,7 @@
 /**
  * NdArray — a strided float64 view over a shared buffer.
  *
- * Two decisions here drive the whole project (ARCHITECTURE.md A-01):
+ * Two decisions here drive the whole project (docs/architecture/overview.md A-01):
  *
  *  1. **float64 everywhere.** Central-difference gradcheck is drowned by float32
  *     rounding (transformer_plan.md 纪律二). Reduced precision is *simulated* in
