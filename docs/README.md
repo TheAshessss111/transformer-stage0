@@ -17,7 +17,7 @@
 | 文档 | 内容 |
 |---|---|
 | [requirements.md](product/requirements.md) | 问题陈述、使用场景、7 组功能需求、8 条非功能指标、9 项明确不做 |
-| [decisions.md](product/decisions.md) | **24 条决策记录**。项目的宪法：任何实现分歧先查这里；要改，改这里并注明日期与理由 |
+| [decisions.md](product/decisions.md) | **25 条决策记录**。项目的宪法：任何实现分歧先查这里；要改，改这里并注明日期与理由 |
 
 ## architecture/ · 怎么搭的
 
