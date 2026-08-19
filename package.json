@@ -19,7 +19,7 @@
       "oxlint --deny-warnings",
       "prettier --write"
     ],
-    "*.{css,md,json}": [
+    "*.{css,json}": [
       "prettier --write"
     ]
   },

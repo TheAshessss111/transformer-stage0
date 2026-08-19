@@ -1,0 +1,7 @@
+dist
+node_modules
+package-lock.json
+
+# Markdown is prose, much of it CJK. Prettier pads table columns by codepoint
+# count, not display width, so it actively misaligns these files.
+*.md
