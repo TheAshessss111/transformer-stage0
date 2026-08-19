@@ -9,6 +9,14 @@ import { check, expect, group } from './harness.ts';
 import { throws } from './assertions.ts';
 import { defineProgram, phaseOfStep, stepAtLine } from '../../trace/program.ts';
 import { runProgram } from '../../trace/recorder.ts';
+import {
+  eventsUpTo,
+  flattenEvents,
+  frameAtEvent,
+  frameAtPosition,
+  framesFor,
+  positionCount,
+} from '../../trace/replay.ts';
 import { NdArray, zeros } from '../ndarray.ts';
 import { exp, matmul, mul, relu, sum } from '../ops.ts';
 import { ascontiguousarray, reshape, transpose } from '../shape.ts';
@@ -296,4 +304,85 @@ check('durationMs is measured', () => {
   const { trace } = runProgram(chainProgram(), chainInputs(12));
   expect(trace.durationMs >= 0 && Number.isFinite(trace.durationMs), `got ${trace.durationMs}`);
   return `${trace.durationMs.toFixed(3)} ms`;
+});
+
+// ── frames and replay ───────────────────────────────────────────────────────
+
+group('trace · frames and replay');
+
+check('one frame per step, including steps that computed nothing', () => {
+  interface S {
+    x: NdArray;
+    y: NdArray;
+  }
+  const program = defineProgram<S>({
+    id: 'quiet-step',
+    language: 'typescript',
+    steps: [
+      { code: '# nothing happens on this line', run: () => ({}) },
+      { code: 'y = relu(x)', run: (s) => ({ y: relu(s.x) }) },
+    ],
+  });
+  const { trace } = runProgram(program, { x: randn([2], 20), y: zeros([]) });
+  const frames = framesFor(trace);
+  expect(frames.length === 2, `got ${frames.length} frames`);
+  expect(frames[0].events.length === 0, 'the quiet step still gets a frame');
+  expect(frames[1].events.length === 1, 'the working step has its event');
+  return 'a step that computes nothing is still highlightable';
+});
+
+check('forward and backward split into independently replayable lists', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(21));
+  const all = framesFor(trace);
+  const fwd = framesFor(trace, 'forward');
+  const bwd = framesFor(trace, 'backward');
+  expect(all.length === 3, `all: ${all.length}`);
+  expect(fwd.length === 2, `forward: ${fwd.length}`);
+  expect(bwd.length === 1, `backward: ${bwd.length}`);
+  expect(bwd[0].index === 0, 'a filtered list renumbers from 0');
+  expect(bwd[0].step === 2, 'but keeps the original step index');
+  return 'forward 2 / backward 1, renumbered but traceable';
+});
+
+check('eventsUpTo is monotone at both granularities', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(22));
+  const frames = framesFor(trace);
+  for (const granularity of ['frame', 'event'] as const) {
+    const total = positionCount(frames, granularity);
+    let previous: number[] = [];
+    for (let p = -1; p < total; p++) {
+      const ids = eventsUpTo(frames, p, granularity).map((e) => e.index);
+      expect(
+        previous.every((id) => ids.includes(id)),
+        `${granularity} position ${p} dropped an event that position ${p - 1} had`,
+      );
+      expect(ids.length >= previous.length, `${granularity} position ${p} shrank`);
+      previous = ids;
+    }
+    expect(
+      previous.length === trace.events.length,
+      `${granularity}: the final position should hold every event`,
+    );
+  }
+  return 'frame and event granularity both monotone';
+});
+
+check('position -1 means nothing has happened yet', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(23));
+  const frames = framesFor(trace);
+  expect(eventsUpTo(frames, -1).length === 0, 'should be empty');
+  expect(frameAtPosition(frames, -1) === undefined, 'no frame before the start');
+});
+
+check('frameAtEvent and frameAtPosition agree', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(24));
+  const frames = framesFor(trace);
+  const flat = flattenEvents(frames);
+  flat.forEach((event, position) => {
+    const viaEvent = frameAtEvent(frames, event.index);
+    const viaPosition = frameAtPosition(frames, position, 'event');
+    expect(viaEvent !== undefined, `no frame for event ${event.index}`);
+    expect(viaEvent === viaPosition, `event ${event.index}: the two lookups disagree`);
+  });
+  return `${flat.length} events cross-checked`;
 });
