@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useHighlightStore } from './context';
-import type { HighlightLevel } from './store';
+import type { HighlightLevel, HighlightSelection } from './store';
 import { targetKey, type HighlightTarget } from './types';
 
 /**
@@ -29,8 +29,8 @@ export function useHighlightLevel(target: HighlightTarget): HighlightLevel {
 }
 
 export interface HighlightActions {
-  setHover: (target: HighlightTarget | null) => void;
-  togglePin: (target: HighlightTarget) => void;
+  setHover: (next: HighlightTarget | HighlightSelection | null) => void;
+  togglePin: (next: HighlightTarget | HighlightSelection) => void;
   clearPins: () => void;
 }
 
@@ -55,8 +55,8 @@ export function useHighlightActions(): HighlightActions {
 
 /** The current hover and pin set, for views that need the whole picture. */
 export function useHighlightSelection(): {
-  hover: HighlightTarget | null;
-  pinned: readonly HighlightTarget[];
+  hover: HighlightSelection | null;
+  pinned: readonly HighlightSelection[];
 } {
   const store = useHighlightStore();
   const subscribe = useCallback((listener: () => void) => store.subscribe(listener), [store]);
