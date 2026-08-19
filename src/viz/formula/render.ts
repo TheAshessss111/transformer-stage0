@@ -51,18 +51,6 @@ export function renderLatex(latex: string, displayMode = true): string {
   return html;
 }
 
-/** Term ids referenced by a LaTeX source, in order of appearance. */
-export function termsInLatex(latex: string): string[] {
-  const found: string[] = [];
-  const pattern = /\\term\s*\{([^}]*)\}/g;
-  let match = pattern.exec(latex);
-  while (match !== null) {
-    found.push(match[1]);
-    match = pattern.exec(latex);
-  }
-  return found;
-}
-
 /** Test seam: renderLatex memoizes, so a test needs a way back to a cold start. */
 export function clearRenderCache(): void {
   cache.clear();
