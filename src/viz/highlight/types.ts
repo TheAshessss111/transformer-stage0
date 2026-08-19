@@ -61,6 +61,47 @@ export function targetKey(target: HighlightTarget): string {
   }
 }
 
+/**
+ * The exact inverse of {@link targetKey}.
+ *
+ * Exists so a subscription can be memoized on the key string alone: a hook that
+ * closed over the target object would have to list it as a dependency, and an
+ * inline `{ kind: 'tensor', name, index }` changes identity on every render.
+ * Round-tripping through the key makes the key the identity, which is what the
+ * design claims anyway.
+ *
+ * Splits on the LAST separator, so a name containing ':' still parses.
+ */
+export function parseTargetKey(key: string): HighlightTarget {
+  const kind = key.slice(0, key.indexOf(':'));
+  const rest = key.slice(key.indexOf(':') + 1);
+
+  switch (kind) {
+    case 't': {
+      const cut = rest.lastIndexOf(':');
+      const name = rest.slice(0, cut);
+      const raw = rest.slice(cut + 1);
+      if (raw === '∅') return { kind: 'tensor', name };
+      const index = raw === '' ? [] : raw.split(',').map((p) => (p === '*' ? '*' : Number(p)));
+      return { kind: 'tensor', name, index };
+    }
+    case 'a': {
+      const cut = rest.lastIndexOf(':');
+      return { kind: 'axis', tensor: rest.slice(0, cut), axis: Number(rest.slice(cut + 1)) };
+    }
+    case 'f': {
+      const cut = rest.lastIndexOf(':');
+      return { kind: 'formula', eq: rest.slice(0, cut), term: rest.slice(cut + 1) };
+    }
+    case 'c':
+      return { kind: 'code', line: Number(rest) };
+    case 'e':
+      return { kind: 'event', index: Number(rest) };
+    default:
+      throw new Error(`parseTargetKey: unrecognised key '${key}'`);
+  }
+}
+
 function indicesOverlap(a: TensorIndex | undefined, b: TensorIndex | undefined): boolean {
   // An absent index means the whole tensor, which meets any part of it.
   if (a === undefined || b === undefined) return true;
