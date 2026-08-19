@@ -35,7 +35,8 @@
 
 现有实施计划：
 
-- [m0-e0.1-e0.2.md](planning/implementation/m0-e0.1-e0.2.md) — 脚手架与张量引擎（**已完成**）
+- [m0-e0.1-e0.2.md](planning/implementation/m0-e0.1-e0.2.md) — E0.1 脚手架 + E0.2 张量引擎（**已完成**）
+- [m0-e0.3-e0.4.md](planning/implementation/m0-e0.3-e0.4.md) — E0.3 执行追踪器 + E0.4 联动总线与公式引擎（**待动工**，含 7 条待确认偏差）
 
 ## contributing/ · 怎么协作
 
