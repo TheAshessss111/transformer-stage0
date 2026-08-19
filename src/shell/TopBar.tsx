@@ -1,5 +1,5 @@
 import LocaleToggle from './LocaleToggle';
-import { useLocale } from './locale';
+import { useLocale } from '../content/i18n';
 
 export default function TopBar() {
   const { t } = useLocale();

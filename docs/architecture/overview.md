@@ -246,7 +246,9 @@ transformer-stage0/
     │   └── snippets/ harness.py  parity.py
     │
     ├── viz/                          # ── 与 Step 无关的可视化原语 ──
-    │   ├── highlight/ HighlightContext.tsx  types.ts
+    │   ├── highlight/ types.ts  store.ts  context.ts  HighlightProvider.tsx  useHighlight.ts
+│   ├── formula/   render.ts  types.ts  validate.ts  Formula.tsx  TermTooltip.tsx  DerivationSteps.tsx
+│   ├── useTracedProgram.ts       #   rAF 合并的重算钩子
     │   ├── TensorGrid.tsx  SliceSelector.tsx
     │   ├── TensorCube3D.tsx  MemoryStrip.tsx
     │   ├── ShapePipeline.tsx  GraphDAG.tsx

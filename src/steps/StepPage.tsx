@@ -1,6 +1,6 @@
 import { Navigate, useParams } from 'react-router';
 import { findStep } from './registry';
-import { useLocale } from '../shell/locale';
+import { useLocale } from '../content/i18n';
 
 /**
  * Placeholder step page. The five-section template (F0.6.5) replaces this in E0.6.

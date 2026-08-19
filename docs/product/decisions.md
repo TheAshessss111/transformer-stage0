@@ -120,8 +120,10 @@ Step 0.1 形状代数 / 0.2 矩阵微积分 / 0.3 softmax 反向 / 0.4 LayerNorm
 - **仓库 public**。免费账号下分支保护、rulesets、Actions 全部可用（private 需 GitHub Pro）；且 D-04 本来就把它定为面试作品集。
 - **main 受保护**：禁止直推、禁止 force push、禁止删除、要求线性历史、要求对话解决完毕、`enforce_admins` 打开（你自己也绕不过）。
 - **不要求 approval**（`required_approving_review_count: 0`）。单人项目里 GitHub 不允许你 approve 自己的 PR，要求 1 个 approval 等于永远无法合并。PR 仍然强制，只是靠 CI 而非人来把关。
-- **CI gate 集**：`format:check` → `lint` → `typecheck` → `verify:engine` → `build`。全部通过才能合并。
-- **`verify:engine` 是这套 gate 的核心**：引擎算错了，上面所有可视化都在骗人（见 `docs/product/requirements.md` 验收第 5 条）。把它放进 CI，`docs/planning/roadmap.md` 风险清单 R-04 才算真正被堵上。
+- **CI gate 集**：`format:check` → `lint` → `typecheck` → `verify` → `build`。全部通过才能合并。
+- **`verify` 是这套 gate 的核心**：引擎算错了，上面所有可视化都在骗人（见 `docs/product/requirements.md` 验收第 5 条）。把它放进 CI，`docs/planning/roadmap.md` 风险清单 R-04 才算真正被堵上。
+
+> **2026-08-20 修订**：脚本原名 `verify:engine`，在 E0.3 (T25) 随 harness 迁到 `src/__dev__/` 时改名为 `verify` —— 它现在也检查 trace 与 highlight 匹配器，不再只是引擎。CI 步骤同步改名。
 
 ## D-24 · 合并策略：rebase-merge，不是 squash
 
@@ -139,3 +141,26 @@ Step 0.1 形状代数 / 0.2 矩阵微积分 / 0.3 softmax 反向 / 0.4 LayerNorm
 - ❌ Merge commit（关闭，与 `required_linear_history` 冲突）
 
 代价：每个 commit 都必须单独说得过去、且单独可编译，因为它们会原样进入 main。这正是我们想要的纪律。
+
+## D-25 · 公式逐项标记：KaTeX `\htmlData` + `\term` 宏
+
+**T27 spike 的结论**（证据页：`/dev/formula`）。D-07 要求公式每一项可悬停/点击，这依赖于能给任意子表达式挂一个稳定的钩子。实测 KaTeX 0.18.4：
+
+作者写 `\term{id}{内容}`，通过宏展开成 `\htmlData{term=id}{内容}`，渲染出的元素带 `data-term="id"`。
+
+| 场景 | 结果 |
+|---|---|
+| 平铺 | ✅ |
+| `\frac` 的分子与分母内部 | ✅ 两项都拿到 |
+| `\sum` 上下标范围内 | ✅ |
+| 嵌套两层（term 套 term） | ✅ 三层全部拿到 |
+| 两个公式用同名 term | ✅ 不冲突 |
+
+**为什么用属性而不是 `\htmlId`**：`\htmlId` 同样可用，但 id 是全文档唯一的，两个公式复用同一个 term 名就会撞。属性没有这个问题，也就不需要给每个公式加前缀。
+
+**两个必须记住的配置**：
+
+- `trust: true` —— 不开 `\htmlData` 直接被丢弃。
+- `strict: (code) => code === 'htmlExtension' ? 'ignore' : 'warn'` —— `trust` 会让 KaTeX 在**每一次渲染**都打印一条 `htmlExtension` 警告。只静音这一条，其余 strict 警告全部保留（公式写错了要能看见）。
+
+**风险 R-02 就此关闭**：备选方案（`\htmlClass` / `\htmlId` / 拆成多个 span）都不需要了。

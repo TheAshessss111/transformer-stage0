@@ -8,9 +8,15 @@
 
 import { check, expect, group } from './harness.ts';
 import { flatEquals, throws } from './assertions.ts';
-import { NdArray, clone, copyFlat, fromNested, size, zeros } from '../ndarray.ts';
-import { randn, randomInts, uniform } from '../random.ts';
-import { add as addOp, matmul as matmulOp, max as maxOp, mulScalar, sum as sumOp } from '../ops.ts';
+import { NdArray, clone, copyFlat, fromNested, size, zeros } from '../core/tensor/ndarray.ts';
+import { randn, randomInts, uniform } from '../core/tensor/random.ts';
+import {
+  add as addOp,
+  matmul as matmulOp,
+  max as maxOp,
+  mulScalar,
+  sum as sumOp,
+} from '../core/tensor/ops.ts';
 import {
   crossEntropyFromLogits,
   crossEntropyVjp,
@@ -20,16 +26,16 @@ import {
   softmaxJacobian,
   softmaxSteps,
   softmaxVjp,
-} from '../softmax.ts';
-import * as A from '../autograd.ts';
+} from '../core/tensor/softmax.ts';
+import * as A from '../core/tensor/autograd.ts';
 import {
   JacobianTooLargeError,
   contractJacobian,
   jacobianByVjp,
   jacobianMemoryEstimate,
-} from '../jacobian.ts';
-import { gradcheck } from '../../gradcheck/relError.ts';
-import { scalarize } from '../../gradcheck/numericalGrad.ts';
+} from '../core/tensor/jacobian.ts';
+import { gradcheck } from '../core/gradcheck/relError.ts';
+import { scalarize } from '../core/gradcheck/numericalGrad.ts';
 
 const TOL = 1e-7;
 
