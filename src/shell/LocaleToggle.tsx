@@ -1,4 +1,4 @@
-import { useLocale } from './locale';
+import { useLocale } from '../content/i18n';
 
 const OPTIONS = [
   { value: 'zh', label: '中' },

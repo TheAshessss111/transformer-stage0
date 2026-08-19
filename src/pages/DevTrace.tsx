@@ -4,7 +4,7 @@ import { RUN_BUDGET_MS, useTracedProgram } from '../viz/useTracedProgram';
 import { framesFor } from '../core/trace/replay';
 import { formatShape } from '../core/tensor/format';
 import { size } from '../core/tensor/ndarray';
-import { useLocale } from '../shell/locale';
+import { useLocale } from '../content/i18n';
 
 /**
  * T26 — the E0.3 proof, and where NFR-2 stops being a hope and becomes a number.

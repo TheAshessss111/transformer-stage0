@@ -15,12 +15,14 @@
  *   vjp.ts         T16 — gradcheck for every hand-written backward
  *   semantics.ts   T20 — softmax family, autograd, Jacobian identities
  *   trace.ts       T21–T23 — program model, recorder, frames and replay
+ *   highlight.ts   T28 — the target protocol and overlap matcher
  */
 
 import './structural.ts';
 import './vjp.ts';
 import './semantics.ts';
 import './trace.ts';
+import './highlight.ts';
 import { report } from './harness.ts';
 
 report();
