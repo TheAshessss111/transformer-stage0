@@ -16,6 +16,11 @@ import {
   type HighlightTarget,
 } from '../viz/highlight/types.ts';
 import { createHighlightStore, selectionKey } from '../viz/highlight/store.ts';
+import {
+  assertValidEquationSpec,
+  termsInLatex,
+  validateEquationSpec,
+} from '../viz/formula/validate.ts';
 
 const SAMPLES: HighlightTarget[] = [
   target.tensor('s'),
@@ -291,4 +296,82 @@ check('a group lights every target it contains, and pins as one unit', () => {
   store.togglePin([...deScale].reverse());
   expect(store.getPinned().length === 0, 'group identity is order-independent');
   return 'one gesture, three targets';
+});
+
+group('formula · author-time validation');
+
+const OK_SPEC = {
+  id: 'ok',
+  latex: String.raw`\term{a}{x} + \term{b}{y}`,
+  terms: {
+    a: { label: { zh: 'a', en: 'a' }, purpose: { zh: '', en: '' } },
+    b: { label: { zh: 'b', en: 'b' }, purpose: { zh: '', en: '' } },
+  },
+} as const;
+
+check('termsInLatex finds terms, including nested and multi-line', () => {
+  expect(termsInLatex(OK_SPEC.latex).join(',') === 'a,b', termsInLatex(OK_SPEC.latex).join(','));
+  const nested = String.raw`\term{outer}{s_i(\bar s_i - \term{inner}{\sum_j \bar s_j s_j})}`;
+  expect(termsInLatex(nested).join(',') === 'outer,inner', termsInLatex(nested).join(','));
+  const spaced = String.raw`\term {spaced} {x}`;
+  expect(termsInLatex(spaced).join(',') === 'spaced', termsInLatex(spaced).join(','));
+  return 'flat, nested and spaced forms';
+});
+
+check('a well-formed spec produces no problems', () => {
+  expect(validateEquationSpec(OK_SPEC as never).length === 0, 'should be clean');
+});
+
+check('a term marked up but not declared is caught', () => {
+  const problems = validateEquationSpec({
+    id: 'missing',
+    latex: String.raw`\term{a}{x} + \term{ghost}{y}`,
+    terms: OK_SPEC.terms,
+  } as never);
+  const missing = problems.filter((p) => p.kind === 'missing-metadata');
+  expect(missing.length === 1, `expected 1 missing, got ${problems.length}`);
+  expect(missing[0].term === 'ghost', missing[0].term);
+  return 'the silently-dead-tooltip case';
+});
+
+check('a term declared but never marked up is also caught', () => {
+  const problems = validateEquationSpec({
+    id: 'unused',
+    latex: String.raw`\term{a}{x}`,
+    terms: OK_SPEC.terms,
+  } as never);
+  const unused = problems.filter((p) => p.kind === 'unused-metadata');
+  expect(unused.length === 1, `expected 1 unused, got ${problems.length}`);
+  expect(unused[0].term === 'b', unused[0].term);
+  return 'the half-applied-rename case';
+});
+
+check('a duplicated term id is caught', () => {
+  const problems = validateEquationSpec({
+    id: 'dup',
+    latex: String.raw`\term{a}{x} + \term{a}{y}`,
+    terms: { a: OK_SPEC.terms.a },
+  } as never);
+  expect(
+    problems.some((p) => p.kind === 'duplicate-markup'),
+    'duplicate ids must not pass',
+  );
+});
+
+check('assertValidEquationSpec throws with every problem named', () => {
+  let message = '';
+  try {
+    assertValidEquationSpec({
+      id: 'bad',
+      latex: String.raw`\term{ghost}{x}`,
+      terms: OK_SPEC.terms,
+    } as never);
+  } catch (err) {
+    message = err instanceof Error ? err.message : String(err);
+  }
+  expect(message.includes('ghost'), `should name the undeclared term: ${message}`);
+  expect(
+    message.includes('a') && message.includes('b'),
+    `should name the unused terms: ${message}`,
+  );
 });

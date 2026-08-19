@@ -1,5 +1,21 @@
-import { termsInLatex } from './render';
-import type { EquationSpec } from './types';
+import type { EquationSpec } from './types.ts';
+
+/**
+ * Term ids referenced by a LaTeX source, in order of appearance.
+ *
+ * Lives here rather than in render.ts so this module stays free of any katex
+ * import, which is what lets the Node verification harness reach it.
+ */
+export function termsInLatex(latex: string): string[] {
+  const found: string[] = [];
+  const pattern = /\\term\s*\{([^}]*)\}/g;
+  let match = pattern.exec(latex);
+  while (match !== null) {
+    found.push(match[1]);
+    match = pattern.exec(latex);
+  }
+  return found;
+}
 
 /**
  * Catch the failure mode that looks like success.
