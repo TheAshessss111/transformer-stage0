@@ -7,8 +7,8 @@
 
 import { check, expect, group } from './harness.ts';
 import { throws } from './assertions.ts';
-import { defineProgram, phaseOfStep, stepAtLine } from '../../trace/program.ts';
-import { runProgram } from '../../trace/recorder.ts';
+import { defineProgram, phaseOfStep, stepAtLine } from '../core/trace/program.ts';
+import { runProgram } from '../core/trace/recorder.ts';
 import {
   eventsUpTo,
   flattenEvents,
@@ -16,12 +16,12 @@ import {
   frameAtPosition,
   framesFor,
   positionCount,
-} from '../../trace/replay.ts';
-import { NdArray, zeros } from '../ndarray.ts';
-import { exp, matmul, mul, relu, sum } from '../ops.ts';
-import { ascontiguousarray, reshape, transpose } from '../shape.ts';
-import { softmax, softmaxVjp } from '../softmax.ts';
-import { randn } from '../random.ts';
+} from '../core/trace/replay.ts';
+import { NdArray, zeros } from '../core/tensor/ndarray.ts';
+import { exp, matmul, mul, relu, sum } from '../core/tensor/ops.ts';
+import { ascontiguousarray, reshape, transpose } from '../core/tensor/shape.ts';
+import { softmax, softmaxVjp } from '../core/tensor/softmax.ts';
+import { randn } from '../core/tensor/random.ts';
 
 group('trace · program model');
 

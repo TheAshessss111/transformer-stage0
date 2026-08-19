@@ -120,8 +120,10 @@ Step 0.1 形状代数 / 0.2 矩阵微积分 / 0.3 softmax 反向 / 0.4 LayerNorm
 - **仓库 public**。免费账号下分支保护、rulesets、Actions 全部可用（private 需 GitHub Pro）；且 D-04 本来就把它定为面试作品集。
 - **main 受保护**：禁止直推、禁止 force push、禁止删除、要求线性历史、要求对话解决完毕、`enforce_admins` 打开（你自己也绕不过）。
 - **不要求 approval**（`required_approving_review_count: 0`）。单人项目里 GitHub 不允许你 approve 自己的 PR，要求 1 个 approval 等于永远无法合并。PR 仍然强制，只是靠 CI 而非人来把关。
-- **CI gate 集**：`format:check` → `lint` → `typecheck` → `verify:engine` → `build`。全部通过才能合并。
-- **`verify:engine` 是这套 gate 的核心**：引擎算错了，上面所有可视化都在骗人（见 `docs/product/requirements.md` 验收第 5 条）。把它放进 CI，`docs/planning/roadmap.md` 风险清单 R-04 才算真正被堵上。
+- **CI gate 集**：`format:check` → `lint` → `typecheck` → `verify` → `build`。全部通过才能合并。
+- **`verify` 是这套 gate 的核心**：引擎算错了，上面所有可视化都在骗人（见 `docs/product/requirements.md` 验收第 5 条）。把它放进 CI，`docs/planning/roadmap.md` 风险清单 R-04 才算真正被堵上。
+
+> **2026-08-20 修订**：脚本原名 `verify:engine`，在 E0.3 (T25) 随 harness 迁到 `src/__dev__/` 时改名为 `verify` —— 它现在也检查 trace 与 highlight 匹配器，不再只是引擎。CI 步骤同步改名。
 
 ## D-24 · 合并策略：rebase-merge，不是 squash
 
