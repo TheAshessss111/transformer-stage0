@@ -8,7 +8,12 @@
 import { check, expect, group } from './harness.ts';
 import { throws } from './assertions.ts';
 import { defineProgram, phaseOfStep, stepAtLine } from '../../trace/program.ts';
-import { zeros } from '../ndarray.ts';
+import { runProgram } from '../../trace/recorder.ts';
+import { NdArray, zeros } from '../ndarray.ts';
+import { exp, matmul, mul, relu, sum } from '../ops.ts';
+import { ascontiguousarray, reshape, transpose } from '../shape.ts';
+import { softmax, softmaxVjp } from '../softmax.ts';
+import { randn } from '../random.ts';
 
 group('trace · program model');
 
@@ -65,4 +70,230 @@ check('a single-line program is the degenerate case, not a special case', () => 
   expect(one.lineRanges.length === 1, 'one range');
   expect(one.lineRanges[0].start === 1 && one.lineRanges[0].end === 1, 'range is 1-1');
   expect(one.source === 'const x = zeros([2]);', 'source is the step');
+});
+
+// ── recorder ────────────────────────────────────────────────────────────────
+
+group('trace · recorder');
+
+interface ChainState {
+  x: NdArray;
+  w: NdArray;
+  h: NdArray;
+  y: NdArray;
+  loss: NdArray;
+}
+
+function chainProgram() {
+  return defineProgram<ChainState>({
+    id: 'chain',
+    language: 'typescript',
+    steps: [
+      { code: 'h = x @ w', run: (s) => ({ h: matmul(s.x, s.w) }) },
+      { code: 'y = relu(h)', run: (s) => ({ y: relu(s.h) }) },
+      { code: 'loss = y.sum()', phase: 'backward', run: (s) => ({ loss: sum(s.y) }) },
+    ],
+  });
+}
+
+function chainInputs(seed: number): ChainState {
+  return {
+    x: randn([3, 4], seed),
+    w: randn([4, 5], seed + 1),
+    h: zeros([]),
+    y: zeros([]),
+    loss: zeros([]),
+  };
+}
+
+check('producer edges resolve along a chain', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(1));
+  const matmulEvent = trace.events.find((e) => e.op === 'matmul');
+  const reluEvent = trace.events.find((e) => e.op === 'relu');
+  expect(matmulEvent !== undefined && reluEvent !== undefined, 'missing events');
+  expect(
+    matmulEvent!.inputs.every((i) => i.event === null),
+    'matmul inputs are program inputs, so their producer is null',
+  );
+  expect(
+    reluEvent!.inputs[0].event === matmulEvent!.index,
+    `relu should consume event ${matmulEvent!.index}, got ${reluEvent!.inputs[0].event}`,
+  );
+  return `matmul#${matmulEvent!.index} -> relu#${reluEvent!.index}`;
+});
+
+check('program inputs and produced tensors both get their state-key names', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(2));
+  const matmulEvent = trace.events.find((e) => e.op === 'matmul')!;
+  expect(matmulEvent.inputs[0].name === 'x', `got ${matmulEvent.inputs[0].name}`);
+  expect(matmulEvent.inputs[1].name === 'w', `got ${matmulEvent.inputs[1].name}`);
+  expect(matmulEvent.output.name === 'h', `got ${matmulEvent.output.name}`);
+  expect([...trace.names.keys()].join(',') === 'x,w,h,y,loss', [...trace.names.keys()].join(','));
+  return 'x, w -> h';
+});
+
+check('a diamond resolves both branches to the same producer', () => {
+  interface S {
+    a: NdArray;
+    left: NdArray;
+    right: NdArray;
+    out: NdArray;
+  }
+  const program = defineProgram<S>({
+    id: 'diamond',
+    language: 'typescript',
+    steps: [
+      { code: 'left = exp(a)', run: (s) => ({ left: exp(s.a) }) },
+      { code: 'right = relu(a)', run: (s) => ({ right: relu(s.a) }) },
+      { code: 'out = left * right', run: (s) => ({ out: mul(s.left, s.right) }) },
+    ],
+  });
+  const { trace } = runProgram(program, {
+    a: randn([2, 3], 3),
+    left: zeros([]),
+    right: zeros([]),
+    out: zeros([]),
+  });
+  const mulEvent = trace.events.find((e) => e.op === 'mul')!;
+  const expEvent = trace.events.find((e) => e.op === 'exp')!;
+  const reluEvent = trace.events.find((e) => e.op === 'relu')!;
+  expect(mulEvent.inputs[0].event === expEvent.index, 'left branch');
+  expect(mulEvent.inputs[1].event === reluEvent.index, 'right branch');
+});
+
+check('a no-op ascontiguousarray is marked passthrough and does not claim authorship', () => {
+  interface S {
+    x: NdArray;
+    c: NdArray;
+    y: NdArray;
+  }
+  const program = defineProgram<S>({
+    id: 'passthrough',
+    language: 'typescript',
+    steps: [
+      // x is already contiguous, so this returns the very same object
+      { code: 'c = ascontiguousarray(x)', run: (s) => ({ c: ascontiguousarray(s.x) }) },
+      { code: 'y = relu(c)', run: (s) => ({ y: relu(s.c) }) },
+    ],
+  });
+  const { trace } = runProgram(program, { x: randn([2, 3], 4), c: zeros([]), y: zeros([]) });
+
+  const pass = trace.events.find((e) => e.op === 'ascontiguousarray')!;
+  expect(pass.passthrough, 'a no-op ascontiguousarray must be flagged passthrough');
+  expect(!pass.didCopy, 'and must not report a copy');
+
+  const reluEvent = trace.events.find((e) => e.op === 'relu')!;
+  expect(
+    reluEvent.inputs[0].event === null,
+    `relu should still see a program input, not the no-op (got ${reluEvent.inputs[0].event})`,
+  );
+  return 'passthrough does not become a self-edge';
+});
+
+check('a real copy is NOT passthrough and reports its element count', () => {
+  interface S {
+    x: NdArray;
+    t: NdArray;
+    flat: NdArray;
+  }
+  const program = defineProgram<S>({
+    id: 'copy',
+    language: 'typescript',
+    steps: [
+      { code: 't = x.T', run: (s) => ({ t: transpose(s.x) }) },
+      { code: 'flat = t.reshape(-1)', run: (s) => ({ flat: reshape(s.t, [-1]) }) },
+    ],
+  });
+  const { trace } = runProgram(program, { x: randn([3, 4], 5), t: zeros([]), flat: zeros([]) });
+  const reshapeEvent = trace.events.find((e) => e.op === 'reshape')!;
+  expect(!reshapeEvent.passthrough, 'a copying reshape is not a passthrough');
+  expect(reshapeEvent.didCopy, 'it should report a copy');
+  expect(reshapeEvent.copiedElements === 12, `got ${reshapeEvent.copiedElements}`);
+  return 'copy - 12 elements';
+});
+
+check('identity is stable across recomputes with different values', () => {
+  const a = runProgram(chainProgram(), chainInputs(10)).trace;
+  const b = runProgram(chainProgram(), chainInputs(99)).trace;
+  const signature = (t: typeof a) =>
+    t.events.map((e) => `${e.index}:${e.step}:${e.op}:${e.phase}`).join('|');
+  expect(signature(a) === signature(b), 'event sequence drifted between runs');
+  expect(a.events.length > 0, 'no events recorded at all');
+  return `${a.events.length} events, identical signature`;
+});
+
+check('steps carry their code, line range, note and phase', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(11));
+  expect(trace.steps.length === 3, `got ${trace.steps.length} steps`);
+  expect(trace.steps[0].code === 'h = x @ w', trace.steps[0].code);
+  expect(trace.steps[2].phase === 'backward', 'step 2 is backward');
+  expect(trace.steps[1].lineStart === 2 && trace.steps[1].lineEnd === 2, 'line range');
+  expect(trace.source.split('\n').length === 3, 'source has one line per step here');
+});
+
+check('suppression holds: softmaxVjp contributes one backward event, not four', () => {
+  interface S {
+    x: NdArray;
+    s: NdArray;
+    g: NdArray;
+    dx: NdArray;
+  }
+  const program = defineProgram<S>({
+    id: 'softmax-backward',
+    language: 'typescript',
+    steps: [
+      { code: 's = softmax(x)', run: (st) => ({ s: softmax(st.x, -1) }) },
+      {
+        code: 'dx = softmax_vjp(s, g)',
+        phase: 'backward',
+        run: (st) => ({ dx: softmaxVjp(st.s, st.g, -1) }),
+      },
+    ],
+  });
+  const { trace } = runProgram(program, {
+    x: randn([2, 4], 6),
+    s: zeros([]),
+    g: randn([2, 4], 7),
+    dx: zeros([]),
+  });
+  const backward = trace.events.filter((e) => e.phase === 'backward');
+  expect(backward.length === 1, `expected 1 backward event, got ${backward.length}`);
+  expect(backward[0].op === 'softmax', `got op ${backward[0].op}`);
+  const forward = trace.events.filter((e) => e.phase === 'forward');
+  expect(forward.length === 1, `expected 1 forward event, got ${forward.length}`);
+  return 'one event per operator, not per primitive';
+});
+
+check('nested runProgram restores the outer hook', () => {
+  const outer = defineProgram<{ x: NdArray; y: NdArray }>({
+    id: 'outer',
+    language: 'typescript',
+    steps: [
+      {
+        code: 'y = relu(x)  # runs an inner program first',
+        run: (s) => {
+          runProgram(
+            defineProgram<{ a: NdArray; b: NdArray }>({
+              id: 'inner',
+              language: 'typescript',
+              steps: [{ code: 'b = exp(a)', run: (i) => ({ b: exp(i.a) }) }],
+            }),
+            { a: randn([2], 8), b: zeros([]) },
+          );
+          return { y: relu(s.x) };
+        },
+      },
+    ],
+  });
+  const { trace } = runProgram(outer, { x: randn([2], 9), y: zeros([]) });
+  const ops = trace.events.map((e) => e.op);
+  expect(ops.includes('relu'), 'the outer relu must still be recorded');
+  expect(!ops.includes('exp'), `the inner program leaked into the outer trace: ${ops.join(',')}`);
+  return 'inner events stayed inside';
+});
+
+check('durationMs is measured', () => {
+  const { trace } = runProgram(chainProgram(), chainInputs(12));
+  expect(trace.durationMs >= 0 && Number.isFinite(trace.durationMs), `got ${trace.durationMs}`);
+  return `${trace.durationMs.toFixed(3)} ms`;
 });
