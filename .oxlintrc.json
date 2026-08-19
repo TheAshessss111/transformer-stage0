@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc", "import"],
+  "plugins": [
+    "react",
+    "typescript",
+    "oxc",
+    "import"
+  ],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
@@ -26,13 +31,18 @@
     "import/no-unassigned-import": [
       "error",
       {
-        "allow": ["**/*.css"]
+        "allow": [
+          "**/*.css"
+        ]
       }
     ]
   },
   "overrides": [
     {
-      "files": ["src/core/**/*.ts", "src/py/**/*.ts"],
+      "files": [
+        "src/core/**/*.ts",
+        "src/py/**/*.ts"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -53,7 +63,18 @@
           }
         ]
       }
+    },
+    {
+      "files": [
+        "src/core/tensor/__dev__/verify.ts"
+      ],
+      "rules": {
+        "import/no-unassigned-import": "off"
+      }
     }
   ],
-  "ignorePatterns": ["dist", "node_modules"]
+  "ignorePatterns": [
+    "dist",
+    "node_modules"
+  ]
 }
