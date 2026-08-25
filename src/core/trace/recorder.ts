@@ -83,7 +83,8 @@ export function runProgram<S extends object>(program: TracedProgram<S>, initial:
     events.push({
       index,
       step,
-      phase: raw.phase,
+      phase: phaseOfStep(program, step),
+      opPhase: raw.phase,
       op: raw.op,
       inputs,
       output: {

@@ -95,6 +95,15 @@ Each `TraceEvent` is one primitive operation:
   sequence, so event 7 is event 7 across recomputes.
 - **`inputs[].event`** — which event produced this input, or `null` for a program
   input. Resolved by object identity, which is what makes the graph drawable.
+- **`phase`** — the phase of the *step* that emitted it, so it always agrees with
+  `TraceStep.phase` and `TraceFrame.phase`. **Filter on this.** A hand-written
+  backward step is built out of forward primitives (`dx = probs * (upstream -
+  weighted_mean)` is a sub and two muls), so asking the operator would report a
+  whole backward pass as forward.
+- **`opPhase`** — what the operator called itself. `'backward'` only for the
+  hand-written VJPs in `core/tensor`, which emit one event for a whole gradient
+  rather than one per primitive. Use it to tell "a VJP ran" apart from "a
+  backward step ran"; use `phase` for everything else.
 - **`isView` / `didCopy` / `copiedElements`** — the memory facts Step 0.1 renders
   as the cyan `view` and amber `copy · N` badges.
 - **`passthrough`** — the output *is* one of the inputs. Only `ascontiguousarray`

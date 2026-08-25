@@ -47,7 +47,25 @@ export interface TraceEvent {
   index: number;
   /** Which program step emitted it. */
   step: number;
+  /**
+   * The phase of the STEP that emitted it, so this always agrees with
+   * TraceStep.phase and TraceFrame.phase.
+   *
+   * Deliberately not the operator's own answer. A hand-written backward step is
+   * built out of forward primitives -- `dx = probs * (upstream - weighted_mean)`
+   * is a sub and two muls -- so taking the operator's word for it would report a
+   * whole backward pass as forward, silently. See {@link opPhase}.
+   */
   phase: 'forward' | 'backward';
+  /**
+   * What the operator called itself.
+   *
+   * 'backward' only for the hand-written VJPs in core/tensor, which emit one
+   * event for a whole gradient instead of one per primitive. It differs from
+   * `phase` exactly when a step spells its own backward pass out of forward
+   * operations, which is the case the code pane exists to show.
+   */
+  opPhase: 'forward' | 'backward';
   op: string;
   inputs: readonly TraceInput[];
   output: TraceOutput;

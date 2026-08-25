@@ -18,7 +18,7 @@ import {
   positionCount,
 } from '../core/trace/replay.ts';
 import { NdArray, zeros } from '../core/tensor/ndarray.ts';
-import { exp, matmul, mul, relu, sum } from '../core/tensor/ops.ts';
+import { exp, matmul, mul, relu, sub, sum } from '../core/tensor/ops.ts';
 import { ascontiguousarray, reshape, transpose } from '../core/tensor/shape.ts';
 import { softmax, softmaxVjp } from '../core/tensor/softmax.ts';
 import { randn } from '../core/tensor/random.ts';
@@ -264,12 +264,60 @@ check('suppression holds: softmaxVjp contributes one backward event, not four', 
     g: randn([2, 4], 7),
     dx: zeros([]),
   });
-  const backward = trace.events.filter((e) => e.phase === 'backward');
+  const backward = trace.events.filter((e) => e.opPhase === 'backward');
   expect(backward.length === 1, `expected 1 backward event, got ${backward.length}`);
   expect(backward[0].op === 'softmax', `got op ${backward[0].op}`);
-  const forward = trace.events.filter((e) => e.phase === 'forward');
+  const forward = trace.events.filter((e) => e.opPhase === 'forward');
   expect(forward.length === 1, `expected 1 forward event, got ${forward.length}`);
+  expect(
+    backward[0].phase === 'backward',
+    'a VJP under a backward step agrees on both notions of phase',
+  );
   return 'one event per operator, not per primitive';
+});
+
+check('a backward step spelled out in forward primitives still reports backward', () => {
+  interface S {
+    x: NdArray;
+    g: NdArray;
+    s: NdArray;
+    dx: NdArray;
+  }
+  // The softmax VJP written the way a lab writes it: one statement per line, out
+  // of ordinary forward operations. Every one of them emits phase 'forward'.
+  const program = defineProgram<S>({
+    id: 'handwritten-backward',
+    language: 'typescript',
+    steps: [
+      { code: 's = softmax(x)', run: (st) => ({ s: softmax(st.x, -1) }) },
+      {
+        code: 'dx = s * (g - (g * s).sum(-1, keepdims=True))',
+        phase: 'backward',
+        run: (st) => ({ dx: mul(st.s, sub(st.g, sum(mul(st.g, st.s), -1, true))) }),
+      },
+    ],
+  });
+  const { trace } = runProgram(program, {
+    x: randn([2, 4], 30),
+    g: randn([2, 4], 31),
+    s: zeros([]),
+    dx: zeros([]),
+  });
+
+  const backwardFrames = framesFor(trace, 'backward');
+  expect(backwardFrames.length === 1, `expected 1 backward frame, got ${backwardFrames.length}`);
+
+  const backward = trace.events.filter((e) => e.phase === 'backward');
+  expect(backward.length > 0, 'the backward step emitted nothing at all');
+  expect(
+    backward.length === backwardFrames[0].events.length,
+    `event phase and frame phase disagree: ${backward.length} events vs ${backwardFrames[0].events.length} in the frame`,
+  );
+  expect(
+    backward.every((e) => e.opPhase === 'forward'),
+    'every one of them is a forward primitive, which is exactly why opPhase is kept separately',
+  );
+  return `${backward.length} forward primitives, all reported as backward`;
 });
 
 check('nested runProgram restores the outer hook', () => {
