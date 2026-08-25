@@ -160,7 +160,7 @@ Step 0.1 形状代数 / 0.2 矩阵微积分 / 0.3 softmax 反向 / 0.4 LayerNorm
 
 **两个必须记住的配置**：
 
-- `trust: true` —— 不开 `\htmlData` 直接被丢弃。
+- `trust: (ctx) => ctx.command === '\\htmlData'` —— 不开 `trust`，`\htmlData` 会被直接丢弃。**但只放行这一条命令**：`trust: true` 会同时打开 `\href`、`\url`、`\includegraphics`、`\htmlId`、`\htmlClass`、`\htmlStyle`，而 `EquationSpec.latex` 是一个没有任何约束的字符串（F0.6.2 之后由内容文件填），渲染结果又走 `dangerouslySetInnerHTML`。实测 katex 0.18.4：`trust: true` 能从 LaTeX 里生成真的 `<a href>` 和 `<img src>`，谓词形式两者都不生成，而 `data-term` 照常拿到。
 - `strict: (code) => code === 'htmlExtension' ? 'ignore' : 'warn'` —— `trust` 会让 KaTeX 在**每一次渲染**都打印一条 `htmlExtension` 警告。只静音这一条，其余 strict 警告全部保留（公式写错了要能看见）。
 
 **风险 R-02 就此关闭**：备选方案（`\htmlClass` / `\htmlId` / 拆成多个 span）都不需要了。

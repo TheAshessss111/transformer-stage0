@@ -1,4 +1,4 @@
-import { renderToString, type KatexOptions } from 'katex';
+import { renderToString, type KatexOptions, type TrustContext } from 'katex';
 
 /**
  * KaTeX rendering, with the per-term markup mechanism locked by the T27 spike.
@@ -23,8 +23,20 @@ export const TERM_SELECTOR = `[${TERM_ATTRIBUTE}]`;
 const strict = (errorCode: string): 'ignore' | 'warn' =>
   errorCode === 'htmlExtension' ? 'ignore' : 'warn';
 
+/**
+ * `trust` gates every HTML-emitting command at once. D-25 needs exactly one of
+ * them, so grant exactly one.
+ *
+ * `trust: true` would also enable `\href`, `\url`, `\includegraphics`,
+ * `\htmlId`, `\htmlClass` and `\htmlStyle` for every equation on the site — and
+ * `EquationSpec.latex` is an unconstrained string that F0.6.2's content system
+ * will start filling from content files, rendered through
+ * dangerouslySetInnerHTML.
+ */
+const trust = (context: TrustContext): boolean => context.command === '\\htmlData';
+
 export const KATEX_OPTIONS: KatexOptions = {
-  trust: true,
+  trust,
   throwOnError: false,
   strict,
   macros: {
