@@ -183,8 +183,25 @@ const { setHover, togglePin, clearPins } = useHighlightActions();
 1. **Memoize the leaf.** A grid label subscribing to the whole tensor re-renders
    the grid whenever any cell is hovered. Without `memo` on the cell, that
    re-renders every child — which is exactly what the external store exists to
-   prevent. Measured on `/dev/highlight`: unmemoized, 48/48 cells re-rendered on
-   one hover; memoized, **1 of 96**.
+   prevent.
+
+   Cells re-rendered per gesture, measured on `/dev/highlight` — 96 cells across
+   four 4×6 grids, each gesture from a cleared hover:
+
+   | Gesture | Unmemoized | Memoized |
+   |---|---|---|
+   | Hover one cell | 24 | **1** |
+   | Move the hover from a cell of `z` to a cell of `e` | 48 | **2** |
+   | Hover a whole-tensor label | 24 | 24 |
+
+   The last row is the shape of the thing: `memo` is not a blanket discount. All
+   24 cells of that tensor really do change level, so all 24 really do re-render.
+   What `memo` removes is the 23 that changed nothing.
+
+   The counter behind these numbers runs in an **effect, not in the render
+   body**. StrictMode double-invokes components in dev, so a counter incremented
+   during render reads double — and it would do so silently, invalidating the
+   claim it exists to support rather than failing.
 
 2. **Build the target with `useMemo`.** An inline `{ kind: 'tensor', name, index }`
    changes identity every render. Subscriptions are keyed by `targetKey`, so this
@@ -226,11 +243,25 @@ finished.
 
 ### A gotcha worth knowing
 
-React re-applies `dangerouslySetInnerHTML` on every render even when the html
-string is byte-identical — the container node survives, the children do not. So
-`Formula` re-applies its highlight attributes in a **layout effect after every
-commit**, with no dependency array. Anything else writing onto KaTeX output must
-do the same, or it will work until the first unrelated state change.
+Writing attributes onto KaTeX output takes two things, and each is useless
+without the other.
+
+**Memoize the `{ __html }` object.** react-dom skips a prop whose value is
+referentially unchanged, so a stable object leaves the rendered subtree alone
+across re-renders. Build it inline —
+`dangerouslySetInnerHTML={{ __html: renderLatex(latex) }}`, which is what the
+`/dev/formula` spike page does — and React reassigns `innerHTML` on *every*
+commit: the container node survives, the children do not, and every attribute an
+effect wrote onto them is gone.
+
+**Sync in a layout effect with no dependency array.** The attributes sit on nodes
+React does not own, and one of them (`aria-label`) carries the locale. A
+dependency-filtered effect leaves terms un-highlighted, or labelled in the
+previous language, after some unrelated commit — a bug that reads as "the hover
+just stopped working sometimes". Layout rather than passive so the attributes are
+back before paint.
+
+`Formula` does both. Anything else writing onto KaTeX output needs both too.
 
 ---
 

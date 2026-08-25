@@ -112,14 +112,23 @@ export default function Formula<Ctx>({ spec, className, ctx, onTermHover }: Form
 
   // Reflect highlight state onto the DOM.
   //
-  // Deliberately runs after EVERY commit, with no dependency array, and as a
-  // layout effect rather than a passive one. React re-applies
-  // dangerouslySetInnerHTML on every render even when the html string is
-  // byte-identical -- verified: the container node survives, the child nodes do
-  // not -- so anything written onto those children is destroyed on the next
-  // render. A dependency-filtered effect would leave the terms un-highlighted
-  // after any unrelated state change, which is exactly the kind of bug that
-  // looks like "the hover just stopped working sometimes".
+  // Runs after EVERY commit, with no dependency array, and as a layout effect
+  // rather than a passive one. Both halves are deliberate.
+  //
+  // No dependency array, because these attributes live on nodes React does not
+  // own -- they are inside dangerouslySetInnerHTML output, and they carry the
+  // locale too, via aria-label. A dependency-filtered effect would leave terms
+  // un-highlighted, or labelled in the previous language, after some unrelated
+  // commit: the kind of bug that reads as "the hover just stopped working
+  // sometimes".
+  //
+  // The KaTeX children themselves survive a re-render only because `inner` is
+  // memoized. react-dom skips a prop whose value is referentially unchanged, so
+  // a stable { __html } object leaves the subtree alone. Build it inline instead
+  // -- as the /dev/formula spike does -- and React reassigns innerHTML on every
+  // single commit: the container survives, the children do not, and every
+  // attribute written here is gone. That memo is load-bearing, not an
+  // optimisation.
   //
   // useLayoutEffect so the attributes are back before paint, with no flicker.
   useLayoutEffect(() => {
