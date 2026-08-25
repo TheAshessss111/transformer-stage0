@@ -6,6 +6,7 @@ import type { EquationSpec } from './types';
 import { useHighlightActions, useHighlightSelection } from '../highlight/useHighlight';
 import { overlapsAny, target, type HighlightTarget } from '../highlight/types';
 import type { HighlightLevel } from '../highlight/store';
+import { useLocale } from '../../content/i18n';
 import TermTooltip from './TermTooltip';
 
 /**
@@ -36,6 +37,7 @@ const RANK: Record<HighlightLevel, number> = { none: 0, hover: 1, pinned: 2 };
 
 export default function Formula<Ctx>({ spec, className, ctx, onTermHover }: FormulaProps<Ctx>) {
   const root = useRef<HTMLDivElement>(null);
+  const { t } = useLocale();
   const { setHover, togglePin } = useHighlightActions();
   const { hover, pinned } = useHighlightSelection();
   const [anchored, setAnchored] = useState<{ term: string; rect: DOMRect } | null>(null);
@@ -137,8 +139,12 @@ export default function Formula<Ctx>({ spec, className, ctx, onTermHover }: Form
       if (level === 'none') el.removeAttribute('data-highlight');
       else el.setAttribute('data-highlight', level);
 
+      // Resolved against the active locale, not hardcoded to one of the two:
+      // the tooltip already says t(label), and a screen reader announcing the
+      // other language for the same element is D-10's exact failure mode.
+      // Re-runs on locale change because this effect has no dependency array.
       const label = spec.terms[term]?.label;
-      if (label) el.setAttribute('aria-label', label.en);
+      if (label) el.setAttribute('aria-label', t(label));
     }
   });
 
