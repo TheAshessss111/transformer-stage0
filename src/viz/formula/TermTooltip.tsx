@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { NdArray, copyFlat, size } from '../../core/tensor/ndarray';
+import { NdArray, readFlat, size } from '../../core/tensor/ndarray';
 import { formatShape, formatValue } from '../../core/tensor/format';
 import { useLocale } from '../../content/i18n';
 import type { TermSpec } from './types';
@@ -32,7 +32,10 @@ function ValuePreview({ value }: { value: NdArray | number | undefined }) {
     );
   }
 
-  const flat = copyFlat(value);
+  // readFlat, not copyFlat: this reads six numbers and owns none of them, and
+  // copyFlat allocates the whole tensor every render — 32 KB per pointer move at
+  // the 4096-element ceiling NFR-2 is measured against.
+  const flat = readFlat(value);
   const shown = Math.min(PREVIEW_VALUES, flat.length);
   return (
     <span className="tabular">
@@ -106,6 +109,9 @@ export default function TermTooltip<Ctx>({ term, ctx, anchor }: TermTooltipProps
           {term.shape ??
             (value instanceof NdArray ? (
               formatShape(value.shape)
+            ) : value === undefined ? (
+              // Nothing to report is not the same as "it is a scalar".
+              <span className="text-ink-faint">—</span>
             ) : (
               <span className="text-ink-faint">scalar</span>
             ))}

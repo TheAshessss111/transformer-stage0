@@ -72,14 +72,25 @@ export default function Formula<Ctx>({ spec, className, ctx, onTermHover }: Form
       return el?.getAttribute('data-term') ?? null;
     };
 
+    // KaTeX nests each term in several spans and pointerover bubbles from every
+    // one of them, so a single sweep across one term fires repeatedly. The store
+    // guards itself (store.ts sameSelection); the anchor state has to guard here
+    // or every pointer move re-measures the tooltip and re-walks every term.
+    // `undefined` rather than null to start, so the very first event always
+    // fires even when it resolves to "not on a term".
+    let lastTerm: string | null | undefined = undefined;
+
     const onOver = (event: Event) => {
       const el = (event.target as HTMLElement | null)?.closest?.(TERM_SELECTOR);
       const term = el?.getAttribute('data-term') ?? null;
+      if (term === lastTerm) return;
+      lastTerm = term;
       setHover(term === null ? null : targetsFor(term));
       setAnchored(term === null || !el ? null : { term, rect: el.getBoundingClientRect() });
       onTermHover?.(term);
     };
     const onLeave = () => {
+      lastTerm = null;
       setHover(null);
       setAnchored(null);
       onTermHover?.(null);
