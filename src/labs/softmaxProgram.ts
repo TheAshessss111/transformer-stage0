@@ -84,17 +84,25 @@ export const SOFTMAX_PROGRAM = defineProgram<SoftmaxState>({
   ],
 });
 
+/**
+ * Every not-yet-produced slot gets its OWN placeholder.
+ *
+ * Sharing one `zeros([])` across all seven looks harmless and is not: the
+ * recorder names arrays by object identity, so seven state keys pointing at one
+ * array collapse to whichever was registered last. Nothing goes wrong here only
+ * because the first step reads `x` — a lab whose first step consumes a
+ * placeholder would see that input labelled `dx`, with no error anywhere.
+ */
 export function softmaxInputs(rows: number, cols: number, seed: number): SoftmaxState {
-  const empty = zeros([]);
   return {
     x: randn([rows, cols], seed),
     upstream: randn([rows, cols], seed + 977),
-    rowMax: empty,
-    z: empty,
-    e: empty,
-    denom: empty,
-    probs: empty,
-    weightedMean: empty,
-    dx: empty,
+    rowMax: zeros([]),
+    z: zeros([]),
+    e: zeros([]),
+    denom: zeros([]),
+    probs: zeros([]),
+    weightedMean: zeros([]),
+    dx: zeros([]),
   };
 }
