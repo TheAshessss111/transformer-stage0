@@ -163,8 +163,15 @@ const Cell = memo(function Cell({
   const level = useHighlightLevel(spot);
   const { setHover, togglePin } = useHighlightActions();
 
+  // Counted in the commit phase, never in the render body. main.tsx runs under
+  // StrictMode, which double-invokes components in dev, so a counter
+  // incremented during render reads double -- and this counter is the only
+  // evidence for the isolation claim, so a broken instrument would quietly
+  // invalidate the claim rather than fail loudly.
   const id = `${name}:${row},${col}`;
-  counter.current.set(id, (counter.current.get(id) ?? 0) + 1);
+  useEffect(() => {
+    counter.current.set(id, (counter.current.get(id) ?? 0) + 1);
+  });
 
   const { text, kind } = formatValue(value, { sigDigits: 3 });
   const background =
@@ -239,13 +246,16 @@ function Grid({
   );
 }
 
+const TENSORS = ['z', 'e', 'upstream', 'dx'] as const;
+const ROWS = 4;
+const COLS = 6;
+const TOTAL_CELLS = TENSORS.length * ROWS * COLS;
+
 export default function DevHighlight() {
   const { t } = useLocale();
   const [seed, setSeed] = useState(1);
-  const rows = 4;
-  const cols = 6;
 
-  const makeInitial = useCallback(() => softmaxInputs(rows, cols, seed), [seed]);
+  const makeInitial = useCallback(() => softmaxInputs(ROWS, COLS, seed), [seed]);
   const { state, trace } = useTracedProgram(SOFTMAX_PROGRAM, makeInitial);
   const { clearPins } = useHighlightActions();
 
@@ -261,9 +271,12 @@ export default function DevHighlight() {
       renders.current;
   }, []);
 
+  // Membership, not count: a cell appears in the map only if it committed a
+  // render since the last reset. That keeps the reading exact even though
+  // StrictMode runs mount effects twice -- a cell counted 1 or 2 is a cell that
+  // rendered either way.
   const sampleRenders = () => {
-    const counts = [...renders.current.values()];
-    setSnapshot({ total: counts.length, touched: counts.filter((c) => c > 1).length });
+    setSnapshot({ total: TOTAL_CELLS, touched: renders.current.size });
   };
   const resetRenders = () => {
     renders.current.clear();
@@ -320,9 +333,15 @@ export default function DevHighlight() {
         </button>
         {snapshot ? (
           <span className="font-mono text-xs" style={{ color: 'var(--color-ok)' }}>
-            {snapshot.touched} / {snapshot.total} cells re-rendered
+            {snapshot.touched} / {snapshot.total} cells rendered since reset
           </span>
         ) : null}
+        <span className="basis-full font-mono text-xs text-ink-faint">
+          {t({
+            zh: 'reset → 悬停一个单元 → sample。数的是「自 reset 以来提交过渲染的单元」。',
+            en: 'reset → hover one cell → sample. Counts cells that committed a render since the reset.',
+          })}
+        </span>
       </div>
 
       <section className="space-y-5 rounded-lg border border-line bg-panel p-5">
@@ -334,13 +353,13 @@ export default function DevHighlight() {
         <section className="space-y-4 rounded-lg border border-line bg-panel p-5">
           <h2 className="text-xs font-semibold tracking-wide text-ink-dim uppercase">tensors</h2>
           {state
-            ? (['z', 'e', 'upstream', 'dx'] as const).map((name) => (
+            ? TENSORS.map((name) => (
                 <Grid
                   key={name}
                   name={name}
                   values={copyFlat(state[name])}
-                  rows={rows}
-                  cols={cols}
+                  rows={ROWS}
+                  cols={COLS}
                   counter={renders}
                 />
               ))
