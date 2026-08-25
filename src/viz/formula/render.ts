@@ -62,8 +62,3 @@ export function renderLatex(latex: string, displayMode = true): string {
   cache.set(key, html);
   return html;
 }
-
-/** Test seam: renderLatex memoizes, so a test needs a way back to a cold start. */
-export function clearRenderCache(): void {
-  cache.clear();
-}
