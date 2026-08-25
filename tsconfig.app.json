@@ -20,7 +20,7 @@
     "strict": true,
     /* Deliberately OFF: the tensor engine does thousands of provably in-range
        `data[offset + i * stride]` reads. Enabling this would fill core/ with
-       non-null assertions and hide real errors. See docs/IMPLEMENTATION-E0.1-E0.2.md T1. */
+       non-null assertions and hide real errors. See docs/planning/implementation/m0-e0.1-e0.2.md T1. */
     "noUncheckedIndexedAccess": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

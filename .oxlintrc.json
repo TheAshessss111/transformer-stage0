@@ -55,7 +55,7 @@
       }
     },
     {
-      "files": ["src/core/tensor/__dev__/verify.ts"],
+      "files": ["src/__dev__/verify.ts"],
       "rules": {
         "import/no-unassigned-import": "off"
       }

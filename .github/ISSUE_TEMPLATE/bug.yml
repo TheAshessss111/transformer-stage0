@@ -46,5 +46,5 @@ body:
   - type: input
     id: verify
     attributes:
-      label: Does `npm run verify:engine` still pass?
+      label: Does `npm run verify` still pass?
       placeholder: 'yes / no / not applicable'

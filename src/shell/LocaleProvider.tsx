@@ -3,10 +3,10 @@ import {
   LOCALE_STORAGE_KEY,
   LocaleContext,
   readStoredLocale,
-  type Bilingual,
+  type L,
   type Locale,
   type LocaleState,
-} from './locale';
+} from '../content/i18n';
 
 export default function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(readStoredLocale);
@@ -18,7 +18,7 @@ export default function LocaleProvider({ children }: { children: React.ReactNode
   }, []);
 
   const value = useMemo<LocaleState>(
-    () => ({ locale, setLocale, t: (v: Bilingual) => v[locale] }),
+    () => ({ locale, setLocale, t: <T,>(v: L<T>): T => v[locale] }),
     [locale, setLocale],
   );
 

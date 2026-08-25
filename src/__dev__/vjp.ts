@@ -14,8 +14,8 @@
 
 import { check, expect, group } from './harness.ts';
 import { flatEquals } from './assertions.ts';
-import { NdArray, clone, fromNested, size, type Shape } from '../ndarray.ts';
-import { randn, uniform } from '../random.ts';
+import { NdArray, clone, fromNested, size, type Shape } from '../core/tensor/ndarray.ts';
+import { randn, uniform } from '../core/tensor/random.ts';
 import {
   add,
   div,
@@ -36,8 +36,8 @@ import {
   sub,
   sum,
   type Axis,
-} from '../ops.ts';
-import { expandDims, permute, reshape, squeeze } from '../shape.ts';
+} from '../core/tensor/ops.ts';
+import { expandDims, permute, reshape, squeeze } from '../core/tensor/shape.ts';
 import {
   absVjp,
   addVjp,
@@ -60,9 +60,9 @@ import {
   squeezeVjp,
   subVjp,
   sumVjp,
-} from '../vjp.ts';
-import { gradcheck } from '../../gradcheck/relError.ts';
-import { scalarize } from '../../gradcheck/numericalGrad.ts';
+} from '../core/tensor/vjp.ts';
+import { gradcheck } from '../core/gradcheck/relError.ts';
+import { scalarize } from '../core/gradcheck/numericalGrad.ts';
 
 const TOL = 1e-7;
 

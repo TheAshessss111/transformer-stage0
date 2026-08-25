@@ -1,8 +1,8 @@
 /** Assertions shared across check modules. */
 
 import { expect } from './harness.ts';
-import { NdArray, copyFlat } from '../ndarray.ts';
-import { setOpHook, type RawOpEvent } from '../../trace/hook.ts';
+import { NdArray, copyFlat } from '../core/tensor/ndarray.ts';
+import { setOpHook, type RawOpEvent } from '../core/trace/hook.ts';
 
 export function throws(fn: () => unknown, fragment: string): void {
   try {

@@ -2,7 +2,7 @@
  * Minimal check collector for the engine verification harness.
  *
  * Runs under Node's native TypeScript type stripping:
- *     node src/core/tensor/__dev__/verify.ts
+ *     node src/__dev__/verify.ts
  *
  * Deliberately not a test framework (see docs/product/decisions.md D-22 and
  * docs/planning/implementation/m0-e0.1-e0.2.md §0.4): no globals, no config, no watch mode.

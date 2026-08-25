@@ -1,5 +1,5 @@
 import { useMediaQuery } from './useMediaQuery';
-import { useLocale } from './locale';
+import { useLocale } from '../content/i18n';
 import LocaleToggle from './LocaleToggle';
 
 /** Desktop-only, per docs/product/decisions.md D-14. */

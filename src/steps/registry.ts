@@ -1,4 +1,4 @@
-import type { Bilingual } from '../shell/locale';
+import type { L } from '../content/i18n';
 
 export type StepId = '0-1' | '0-2' | '0-3' | '0-4' | '0-5';
 
@@ -8,10 +8,10 @@ export interface StepMeta {
   id: StepId;
   /** Display number, matching transformer_plan.md ("0.1"). */
   number: string;
-  title: Bilingual;
-  tagline: Bilingual;
+  title: L;
+  tagline: L;
   /** The headline visualization this step is built around (docs/planning/roadmap.md D-12). */
-  signatureViz: Bilingual;
+  signatureViz: L;
   status: StepStatus;
 }
 

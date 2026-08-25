@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router';
 import { STEPS, type StepStatus } from '../steps/registry';
-import { useLocale } from './locale';
+import { useLocale } from '../content/i18n';
 
 const STATUS_DOT: Record<StepStatus, string> = {
   planned: 'bg-line-strong',
@@ -46,10 +46,12 @@ export default function Sidebar() {
         ))}
       </ul>
 
-      <div className="border-t border-line px-5 py-3 font-mono text-xs text-ink-faint">
-        <NavLink to="/dev/tokens" className="hover:text-ink-dim">
-          /dev/tokens
-        </NavLink>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-line px-5 py-3 font-mono text-xs text-ink-faint">
+        {['/dev/tokens', '/dev/trace', '/dev/formula', '/dev/highlight'].map((path) => (
+          <NavLink key={path} to={path} className="hover:text-ink-dim">
+            {path.replace('/dev/', '')}
+          </NavLink>
+        ))}
       </div>
     </nav>
   );

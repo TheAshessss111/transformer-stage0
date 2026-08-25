@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /*
- * Stage Zero design tokens — dark technical dashboard (DECISIONS.md D-11).
+ * Stage Zero design tokens — dark technical dashboard (docs/product/decisions.md D-11).
  *
  * Tailwind's default palette is reset to `initial` on purpose: if `bg-blue-500`
  * does not exist as a utility, off-system colours cannot leak into the UI by
@@ -16,7 +16,7 @@
   --color-white: #ffffff;
   --color-black: #000000;
 
-  /* ── surfaces: three levels (ARCHITECTURE.md section 8) ── */
+  /* ── surfaces: three levels (docs/architecture/overview.md section 8) ── */
   --color-surface: oklch(0.17 0.012 265); /* page background */
   --color-panel: oklch(0.22 0.014 265); /* raised card / sidebar */
   --color-well: oklch(0.13 0.01 265); /* recessed: grids, code, inputs */
@@ -87,4 +87,28 @@
 @utility tabular {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
+}
+
+/*
+ * Formula terms. The attribute is written by viz/formula/Formula.tsx rather
+ * than by a React re-render, so hovering never re-runs KaTeX.
+ */
+@layer components {
+  [data-term] {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0 2px;
+    transition:
+      background-color 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  [data-term][data-highlight='hover'] {
+    background-color: color-mix(in oklab, var(--color-view) 20%, transparent);
+  }
+
+  [data-term][data-highlight='pinned'] {
+    background-color: color-mix(in oklab, var(--color-view) 32%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-view);
+  }
 }

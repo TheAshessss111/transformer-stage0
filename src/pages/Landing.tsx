@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { STEPS } from '../steps/registry';
-import { useLocale } from '../shell/locale';
+import { useLocale } from '../content/i18n';
 
 export default function Landing() {
   const { t } = useLocale();

@@ -8,7 +8,7 @@
 |---|---|
 | 第一次看这个项目 | 根 [README](../README.md) → [需求规格](product/requirements.md) → [路线图](planning/roadmap.md) |
 | 准备动手写代码 | [架构总览](architecture/overview.md) → [引擎参考](architecture/engine.md) → [分支策略](contributing/branching.md) |
-| 想知道"为什么是这样" | [决策记录](product/decisions.md) —— 24 条拍板，每条都带理由和代价 |
+| 想知道"为什么是这样" | [决策记录](product/decisions.md) —— 25 条拍板，每条都带理由和代价 |
 
 ---
 
@@ -17,7 +17,7 @@
 | 文档 | 内容 |
 |---|---|
 | [requirements.md](product/requirements.md) | 问题陈述、使用场景、7 组功能需求、8 条非功能指标、9 项明确不做 |
-| [decisions.md](product/decisions.md) | **24 条决策记录**。项目的宪法：任何实现分歧先查这里；要改，改这里并注明日期与理由 |
+| [decisions.md](product/decisions.md) | **25 条决策记录**。项目的宪法：任何实现分歧先查这里；要改，改这里并注明日期与理由 |
 
 ## architecture/ · 怎么搭的
 
@@ -25,6 +25,7 @@
 |---|---|
 | [overview.md](architecture/overview.md) | 技术栈、8 层分层、四个核心设计决策（真实 stride 语义 / trace 驱动可视化 / 联动总线 / 双语内联）、完整目录结构 |
 | [engine.md](architecture/engine.md) | `core/tensor` 的 API 参考与**三条契约**。E0.5/E0.7 照着它写代码；将来整包搬进 `handmade-transformer` 的也是它 |
+| [trace.md](architecture/trace.md) | **实验室作者手册**：怎么声明一个 TracedProgram，怎么让公式、矩阵、代码行互相指向。E0.8 起每个 lab 都照着它写 |
 
 ## planning/ · 什么时候做
 
@@ -35,7 +36,8 @@
 
 现有实施计划：
 
-- [m0-e0.1-e0.2.md](planning/implementation/m0-e0.1-e0.2.md) — 脚手架与张量引擎（**已完成**）
+- [m0-e0.1-e0.2.md](planning/implementation/m0-e0.1-e0.2.md) — E0.1 脚手架 + E0.2 张量引擎（**已完成**）
+- [m0-e0.3-e0.4.md](planning/implementation/m0-e0.3-e0.4.md) — E0.3 执行追踪器 + E0.4 联动总线与公式引擎（**已完成**）
 
 ## contributing/ · 怎么协作
 
