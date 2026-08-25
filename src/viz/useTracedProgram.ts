@@ -26,8 +26,10 @@ import type { Trace } from '../core/trace/types';
 export interface RunTiming {
   /** Duration of the most recent run, in ms. */
   last: number;
+  /** Over the last {@link HISTORY} runs, not over `runs`. */
   p50: number;
   p95: number;
+  /** Cumulative since mount — the number the rAF coalescing claim is read off. */
   runs: number;
 }
 
@@ -43,10 +45,17 @@ export const RUN_BUDGET_MS = 8;
 const HISTORY = 64;
 const warned = new Set<string>();
 
+/**
+ * Nearest-rank percentile.
+ *
+ * `floor` lands one rank too high: with 20 samples it puts p95 at index 19, the
+ * maximum. The readout on /dev/trace is the evidence for NFR-2, so it has to
+ * measure the thing it names.
+ */
 function percentile(sorted: readonly number[], fraction: number): number {
   if (sorted.length === 0) return 0;
-  const rank = Math.min(sorted.length - 1, Math.floor(fraction * sorted.length));
-  return sorted[rank];
+  const rank = Math.ceil(fraction * sorted.length) - 1;
+  return sorted[Math.min(sorted.length - 1, Math.max(0, rank))];
 }
 
 export function useTracedProgram<S extends object>(
@@ -60,11 +69,10 @@ export function useTracedProgram<S extends object>(
   const handle = useRef<number | null>(null);
 
   useEffect(() => {
-    // Already scheduled for this frame. The pending callback is cancelled by
-    // this effect's cleanup and re-scheduled with the newer makeInitial, so the
-    // latest inputs always win and nothing queues.
-    if (handle.current !== null) return;
-
+    // The coalescing is the cleanup's doing: React runs it before re-running
+    // this effect, so a pending callback is cancelled and re-scheduled with the
+    // newer makeInitial. The latest inputs always win, and a drag that changes
+    // inputs several times within one frame still produces exactly one run.
     handle.current = requestAnimationFrame(() => {
       handle.current = null;
 
@@ -76,18 +84,19 @@ export function useTracedProgram<S extends object>(
       if (history.length > HISTORY) history.shift();
 
       const sorted = [...history].sort((a, b) => a - b);
-      const next: RunTiming = {
+      const p50 = percentile(sorted, 0.5);
+      const p95 = percentile(sorted, 0.95);
+      setTiming((previous) => ({
         last: run.trace.durationMs,
-        p50: percentile(sorted, 0.5),
-        p95: percentile(sorted, 0.95),
-        runs: history.length,
-      };
-      setTiming((previous) => ({ ...next, runs: previous.runs + 1 }));
+        p50,
+        p95,
+        runs: previous.runs + 1,
+      }));
 
-      if (import.meta.env.DEV && next.p95 > RUN_BUDGET_MS && !warned.has(program.id)) {
+      if (import.meta.env.DEV && p95 > RUN_BUDGET_MS && !warned.has(program.id)) {
         warned.add(program.id);
         console.warn(
-          `[useTracedProgram] '${program.id}' p95 is ${next.p95.toFixed(1)}ms, over the ` +
+          `[useTracedProgram] '${program.id}' p95 is ${p95.toFixed(1)}ms, over the ` +
             `${RUN_BUDGET_MS}ms budget (NFR-2). Reduce the tensor sizes or split the program.`,
         );
       }
