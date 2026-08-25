@@ -44,7 +44,7 @@ jobs:
         run: npx tsc -b
 
       - name: Verify
-        # The reason this gate exists. 102 checks including a gradcheck of every
+        # The reason this gate exists. 153 checks including a gradcheck of every
         # hand-written VJP. If the engine is wrong, every visualization above it
         # is lying, and nothing on screen would show it.
         run: npm run verify

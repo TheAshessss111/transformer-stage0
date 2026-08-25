@@ -6,7 +6,7 @@
 >
 > 看到操作就知道 shape 怎么变；看到公式就知道每一项是什么形状、现在的值是多少、它在干什么。
 
-**状态**：M0 进行中。E0.1（脚手架与工程规范）、E0.2（张量引擎）已完成 —— 引擎有 102 项检查，每个手写反向都过 gradcheck。
+**状态**：M0 进行中。E0.1（脚手架与工程规范）、E0.2（张量引擎）、E0.3（执行追踪器）、E0.4（联动总线与公式引擎）已完成 —— `npm run verify` 153 项检查全绿，每个手写反向都过 gradcheck。
 
 ## 覆盖的五个 Step
 
@@ -23,7 +23,7 @@
 ```bash
 npm install
 npm run dev              # 开发服务器
-npm run verify           # 152 项检查（无测试框架，跑在 Node 原生 TS 上）
+npm run verify           # 153 项检查（无测试框架，跑在 Node 原生 TS 上）
 ```
 
 ## 文档
@@ -32,7 +32,7 @@ npm run verify           # 152 项检查（无测试框架，跑在 Node 原生 
 
 | 分组 | 内容 |
 |---|---|
-| [product/](docs/product/) | [需求规格](docs/product/requirements.md) · [24 条决策记录](docs/product/decisions.md) |
+| [product/](docs/product/) | [需求规格](docs/product/requirements.md) · [25 条决策记录](docs/product/decisions.md) |
 | [architecture/](docs/architecture/) | [架构总览](docs/architecture/overview.md) · [引擎 API 参考](docs/architecture/engine.md) |
 | [planning/](docs/planning/) | [路线图](docs/planning/roadmap.md) · [实施计划](docs/planning/implementation/) |
 | [contributing/](docs/contributing/) | [分支策略](docs/contributing/branching.md) · [提交规范](docs/contributing/commits.md) · [DoD](docs/contributing/definition-of-done.md) |

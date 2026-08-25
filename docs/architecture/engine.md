@@ -13,8 +13,9 @@ Verify it at any time:
 npm run verify
 ```
 
-102 checks. Runs on Node's native TypeScript type stripping — no test framework,
-no config, no CI.
+153 checks, of which the engine's are the original 102. Runs on Node's native
+TypeScript type stripping — no test framework, no config. D-23 made it a
+required CI gate.
 
 ---
 

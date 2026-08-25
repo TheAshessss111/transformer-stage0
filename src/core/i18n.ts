@@ -5,7 +5,7 @@
  * core/trace carries display text (a program step's "what is happening here"
  * note) that must be written in both languages at once.
  *
- * ARCHITECTURE.md A-04: writing one language means writing both, enforced by the
+ * docs/architecture/overview.md A-04: writing one language means writing both, enforced by the
  * type. A key-value catalogue in two files would drift; this cannot.
  */
 

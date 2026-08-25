@@ -24,6 +24,6 @@ Closes:
 ---
 
 - [ ] Every commit compiles and passes `verify` on its own (rebase-merge lands them all on `main` — D-24)
-- [ ] New `core/` behaviour has a check in `src/core/tensor/__dev__/`
+- [ ] New `core/` behaviour has a check in `src/__dev__/`
 - [ ] New public API is reflected in `docs/architecture/engine.md`
 - [ ] No threshold was loosened to make a check pass
